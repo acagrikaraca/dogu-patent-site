@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Hizmetlerimiz | Doğu Patent</title>
+  <meta name="description" content="Doğu Patent hizmetleri: Marka tescil, patent tescil, endüstriyel tasarım tescil, PCT başvuruları, Madrid Protokolü, Avrupa Patenti."/>
+  <link rel="icon" type="image/png" href="/images/logo-icon.png"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link href="/css/shared.css" rel="stylesheet"/>
+  <style>
+    .page-hero { padding: 10rem 2rem 4rem; max-width: 1280px; margin: 0 auto; }
+    .page-hero .label { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--secondary); margin-bottom: 1rem; }
+    .page-hero h1 { font-size: clamp(2.5rem, 4vw, 3.5rem); font-weight: 800; letter-spacing: -0.05em; color: var(--primary); margin-bottom: 2rem; line-height: 1.1; }
+    .page-hero p { font-size: 1.125rem; color: var(--secondary); max-width: 40rem; line-height: 1.7; }
+
+    .service-section { padding: 6rem 0; }
+    .service-section:nth-child(even) { background: var(--surface-container-low); }
+    .service-row { max-width: 1280px; margin: 0 auto; padding: 0 2rem; display: grid; grid-template-columns: 5fr 7fr; gap: 3rem; align-items: center; }
+    .service-row.reverse { direction: rtl; }
+    .service-row.reverse > * { direction: ltr; }
+    .service-icon-box { width: 100%; aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 3rem; }
+    .service-icon-box.light { background: white; box-shadow: 0 20px 40px rgba(0,36,65,0.04); }
+    .service-icon-box.dark { background: var(--primary); }
+    .service-icon-box .material-symbols-outlined { font-size: 4rem; margin-bottom: 1.5rem; }
+    .service-icon-box.light .material-symbols-outlined { color: var(--primary); }
+    .service-icon-box.dark .material-symbols-outlined { color: white; }
+    .service-icon-box h2 { font-size: 1.875rem; font-weight: 700; }
+    .service-icon-box.light h2 { color: var(--primary); }
+    .service-icon-box.dark h2 { color: white; }
+
+    .service-detail h3 { font-size: 1.5rem; font-weight: 700; color: var(--primary); margin-bottom: 1.5rem; }
+    .service-detail p { color: var(--on-surface-variant); line-height: 1.7; margin-bottom: 1.5rem; }
+    .service-box { background: var(--surface-container-highest); padding: 2rem; margin-bottom: 2rem; }
+    .service-box h4 { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--primary); margin-bottom: 1rem; }
+    .service-box ul { list-style: none; }
+    .service-box li { display: flex; align-items: flex-start; gap: 0.75rem; font-size: 0.875rem; color: var(--secondary); margin-bottom: 0.75rem; }
+    .service-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem; }
+    .service-stat { border-left: 2px solid var(--primary); padding-left: 1rem; }
+    .service-stat span { font-size: 1.25rem; font-weight: 700; color: var(--primary); }
+    .service-stat p { font-size: 0.625rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--secondary); }
+
+    .intl-section { padding: 8rem 0; background: var(--surface-container-low); }
+    .intl-header { max-width: 1280px; margin: 0 auto; padding: 0 2rem; margin-bottom: 5rem; }
+    .intl-grid { max-width: 1280px; margin: 0 auto; padding: 0 2rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; }
+    .intl-card { background: var(--surface); padding: 3rem; transition: all 0.5s; }
+    .intl-card:hover { background: var(--primary); color: white; }
+    .intl-card:hover .material-symbols-outlined { color: white; }
+    .intl-card:hover h4 { color: white; }
+    .intl-card:hover p { color: var(--on-primary-container); }
+    .intl-card .material-symbols-outlined { font-size: 2.5rem; color: var(--primary); margin-bottom: 1.5rem; display: block; transition: color 0.5s; }
+    .intl-card h4 { font-size: 1.25rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem; color: var(--primary); transition: color 0.5s; }
+    .intl-card p { font-size: 0.875rem; line-height: 1.7; opacity: 0.7; transition: color 0.5s; }
+
+    .cta-bottom { padding: 6rem 0; }
+    .cta-bottom-inner { max-width: 1280px; margin: 0 auto; padding: 0 2rem; }
+    .cta-bottom-box { background: var(--primary); padding: 4rem; position: relative; overflow: hidden; }
+    .cta-bottom-box h2 { font-size: 2.5rem; font-weight: 700; color: white; margin-bottom: 1.5rem; }
+    .cta-bottom-box p { color: var(--on-primary-container); font-size: 1.125rem; margin-bottom: 2.5rem; line-height: 1.7; max-width: 40rem; }
+    .cta-buttons { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .btn-white { background: white; color: var(--primary); padding: 1rem 2.5rem; font-weight: 700; letter-spacing: -0.02em; border: none; cursor: pointer; text-decoration: none; transition: all 0.3s; font-family: 'Inter', sans-serif; }
+    .btn-white:hover { background: var(--surface-container); }
+    .btn-ghost { border: 1px solid rgba(255,255,255,0.3); color: white; padding: 1rem 2.5rem; font-weight: 700; letter-spacing: -0.02em; background: none; cursor: pointer; text-decoration: none; transition: all 0.3s; font-family: 'Inter', sans-serif; }
+    .btn-ghost:hover { background: rgba(255,255,255,0.1); }
+
+    @media (max-width: 768px) {
+      .service-row, .service-row.reverse { grid-template-columns: 1fr; direction: ltr; }
+      .service-icon-box { aspect-ratio: auto; }
+      .intl-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Nav -->
+  <nav class="nav-main">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo"><img src="/images/logo-icon.png" alt="Doğu Patent"/><span>Doğu Patent</span></a>
+      <div class="nav-links">
+        <a href="/">Ana Sayfa</a>
+        <a href="/hizmetlerimiz" class="active">Hizmetlerimiz</a>
+        <a href="/hakkimizda">Hakkımızda</a>
+        <a href="/blog">Blog</a>
+        <a href="/iletisim">İletişim</a>
+        <a href="/#ucretsiz-arastirma" class="nav-cta">Ücretsiz Araştırma</a>
+      </div>
+      <button class="nav-hamburger"><span class="material-symbols-outlined">menu</span></button>
+    </div>
+    <div class="nav-mobile">
+      <a href="/">Ana Sayfa</a><a href="/hizmetlerimiz" class="active">Hizmetlerimiz</a><a href="/hakkimizda">Hakkımızda</a><a href="/blog">Blog</a><a href="/iletisim">İletişim</a>
+    </div>
+  </nav>
+
+  <main>
+    <section class="page-hero">
+      <p class="label">Hizmet Portföyü</p>
+      <h1>Fikri Mülkiyetin Profesyonel Korunması</h1>
+      <p>Doğu Patent, yeniliklerinizi ulusal ve uluslararası standartlarda hukuki koruma altına alır. Marka, patent ve tasarım tescili süreçlerinde teknik hassasiyet ve stratejik derinlik sunuyoruz.</p>
+    </section>
+
+    <!-- Marka Tescili -->
+    <section class="service-section" id="marka">
+      <div class="service-row">
+        <div class="service-icon-box light">
+          <span class="material-symbols-outlined">verified_user</span>
+          <h2>Marka Tescili</h2>
+        </div>
+        <div class="service-detail">
+          <h3>Kimliğinizi Koruma Altına Alın</h3>
+          <p>Markanız, işletmenizin en değerli varlığıdır. Marka tescili, isim, logo ve sloganlarınızın rakipler tarafından kullanılmasını engeller ve size mutlak kullanım hakkı tanır. TÜRKPATENT nezdinde başvuru, takip ve tescil süreçlerinin tamamını profesyonelce yönetiyoruz.</p>
+          <div class="service-box">
+            <h4>Neden Tescil Edilmeli?</h4>
+            <ul>
+              <li><span class="material-symbols-outlined" style="font-size:1rem;color:var(--primary);">check_circle</span> Hukuki taklit koruması ve tazminat hakları</li>
+              <li><span class="material-symbols-outlined" style="font-size:1rem;color:var(--primary);">check_circle</span> Lisanslama ve devir yoluyla gelir elde etme</li>
+              <li><span class="material-symbols-outlined" style="font-size:1rem;color:var(--primary);">check_circle</span> E-ticaret platformlarında marka onay süreçleri</li>
+              <li><span class="material-symbols-outlined" style="font-size:1rem;color:var(--primary);">check_circle</span> 10 yıllık süreyle tescil, süresiz yenilenebilir</li>
+            </ul>
+          </div>
+          <a href="/iletisim" class="btn-primary" style="display:inline-block; text-decoration:none;">Ücretsiz Danışmanlık Alın</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Patent Tescili -->
+    <section class="service-section" id="patent">
+      <div class="service-row reverse">
+        <div class="service-icon-box dark">
+          <span class="material-symbols-outlined">lightbulb</span>
+          <h2>Patent Tescili</h2>
+        </div>
+        <div class="service-detail">
+          <h3>Teknolojik Üstünlüğü Belgeleyin</h3>
+          <p>İcatlarınız ve teknik çözümleriniz patent koruması ile stratejik birer koz haline gelir. Doğu Patent, buluşunuzun yenilik ve buluş basamağı kriterlerini analiz ederek koruma kapsamını en geniş seviyede tutar.</p>
+          <div class="service-stats">
+            <div class="service-stat">
+              <span>20 Yıl</span>
+              <p>Maksimum Koruma Süresi</p>
+            </div>
+            <div class="service-stat">
+              <span>Global</span>
+              <p>Uluslararası Başvuru Desteği</p>
+            </div>
+          </div>
+          <p>Patent ve faydalı model başvuruları, tarifname hazırlama, istem yazımı ve TÜRKPATENT nezdindeki tüm resmi işlemler kapsamında hizmet veriyoruz.</p>
+          <a href="/iletisim" class="btn-primary" style="display:inline-block; text-decoration:none; margin-top:1rem;">Ücretsiz Danışmanlık Alın</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tasarım Tescili -->
+    <section class="service-section" id="tasarim">
+      <div class="service-row">
+        <div class="service-icon-box light">
+          <span class="material-symbols-outlined">draw</span>
+          <h2>Tasarım Tescili</h2>
+        </div>
+        <div class="service-detail">
+          <h3>Estetiği Koruma Altına Alın</h3>
+          <p>Ürünlerinizin dış görünümü, desenleri ve formları markanızın imzasıdır. Tasarım tescili, görsel özgünlüğünüzü kopyalanmaya karşı korur ve moda, otomotiv, mobilya gibi sektörlerde hayati önem taşır.</p>
+          <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:1rem; margin-bottom:2rem; text-align:center;">
+            <div style="background:white; padding:1rem;">
+              <span class="material-symbols-outlined" style="color:var(--primary);display:block;margin-bottom:0.5rem;">draw</span>
+              <p style="font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;">Çizgisel Koruma</p>
+            </div>
+            <div style="background:white; padding:1rem;">
+              <span class="material-symbols-outlined" style="color:var(--primary);display:block;margin-bottom:0.5rem;">texture</span>
+              <p style="font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;">Doku & Renk</p>
+            </div>
+            <div style="background:white; padding:1rem;">
+              <span class="material-symbols-outlined" style="color:var(--primary);display:block;margin-bottom:0.5rem;">3d_rotation</span>
+              <p style="font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;">3D Formlar</p>
+            </div>
+          </div>
+          <a href="/iletisim" class="btn-primary" style="display:inline-block; text-decoration:none;">Ücretsiz Danışmanlık Alın</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Uluslararası Hizmetler -->
+    <section class="intl-section">
+      <div class="intl-header">
+        <span style="display:block;font-size:0.6875rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--secondary);margin-bottom:1rem;">Küresel Erişim</span>
+        <h2 style="font-size:3rem;font-weight:800;letter-spacing:-0.05em;color:var(--primary);">Uluslararası Hizmetlerimiz</h2>
+      </div>
+      <div class="intl-grid">
+        <div class="intl-card">
+          <span class="material-symbols-outlined">language</span>
+          <h4>PCT Başvuruları</h4>
+          <p>Patent İşbirliği Antlaşması kapsamında 150'den fazla ülkede eş zamanlı patent koruma stratejileri ve başvuru yönetimi.</p>
+        </div>
+        <div class="intl-card">
+          <span class="material-symbols-outlined">gavel</span>
+          <h4>Madrid Protokolü</h4>
+          <p>Markalarınızın uluslararası tescili için en verimli ve ekonomik global başvuru yönetimi. Tek başvuruyla çoklu ülke koruması.</p>
+        </div>
+        <div class="intl-card">
+          <span class="material-symbols-outlined">shield</span>
+          <h4>Avrupa Patenti (EPO)</h4>
+          <p>Avrupa Patent Ofisi nezdinde vekillik ve tüm Avrupa ülkelerinde validasyon işlemleri.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-bottom">
+      <div class="cta-bottom-inner">
+        <div class="cta-bottom-box">
+          <h2>Hazır mısınız?</h2>
+          <p>Fikrinizi korumak için ilk adımı bugün atın. Uzman danışmanlarımız başvuru sürecinizi analiz etmek için sizi bekliyor.</p>
+          <div class="cta-buttons">
+            <a href="/#ucretsiz-arastirma" class="btn-white">Ücretsiz Ön Analiz İsteyin</a>
+            <a href="https://wa.me/908502428525" class="btn-ghost" target="_blank">WhatsApp İletişim</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer-main">
+    <div class="footer-grid">
+      <div><div class="footer-brand">DOĞU PATENT</div><p class="footer-text">Fikri mülkiyet haklarınızın tescili ve korunmasında güvenilir çözüm ortağınız.</p></div>
+      <div><h4 class="footer-heading">İletişim</h4><a href="https://www.dogupatent.com" class="footer-link">www.dogupatent.com</a><a href="mailto:info@dogupatent.com" class="footer-link">info@dogupatent.com</a><a href="tel:08502428525" class="footer-link">0850 242 85 25</a></div>
+      <div><h4 class="footer-heading">Sayfalar</h4><a href="/" class="footer-link">Ana Sayfa</a><a href="/hakkimizda" class="footer-link">Hakkımızda</a><a href="/blog" class="footer-link">Blog</a><a href="/iletisim" class="footer-link">İletişim</a></div>
+    </div>
+    <div class="footer-bottom"><p>&copy; 2026 Doğu Patent. Tüm hakları saklıdır.</p><div class="footer-social"><a href="https://www.instagram.com/dogupatent" target="_blank">Instagram</a><a href="https://www.linkedin.com/company/dogupatent" target="_blank">LinkedIn</a></div></div>
+  </footer>
+
+  <a href="https://wa.me/908502428525" class="whatsapp-float" target="_blank" title="WhatsApp">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+  </a>
+  <script src="/js/main.js"></script>
+</body>
+</html>

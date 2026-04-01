@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Blog | Doğu Patent</title>
+  <link rel="icon" type="image/png" href="/images/logo-icon.png"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link href="/css/shared.css" rel="stylesheet"/>
+  <style>
+    .post-hero{padding:10rem 2rem 3rem;max-width:800px;margin:0 auto}
+    .post-back{display:inline-flex;align-items:center;gap:.5rem;font-size:.8125rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--primary);text-decoration:none;margin-bottom:2rem}
+    .post-back:hover{opacity:.7}
+    .post-meta{display:flex;align-items:center;gap:1.5rem;margin-bottom:2rem;flex-wrap:wrap}
+    .post-tag{font-size:.6875rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;background:var(--primary-container);color:#fff;padding:.25rem .75rem}
+    .post-date,.post-read{font-size:.75rem;color:var(--secondary)}
+    .post-hero h1{font-size:clamp(2rem,4vw,3rem);font-weight:800;color:var(--primary);letter-spacing:-.03em;line-height:1.2;margin-bottom:1.5rem}
+    .post-ozet{font-size:1.25rem;color:var(--secondary);line-height:1.7;border-left:3px solid var(--primary);padding-left:1.5rem}
+    .post-image{max-width:800px;margin:0 auto;padding:0 2rem}
+    .post-image img{width:100%;height:auto;max-height:450px;object-fit:cover}
+    .post-content{max-width:800px;margin:0 auto;padding:3rem 2rem 6rem}
+    .post-content .icerik{font-size:1.0625rem;color:var(--on-surface);line-height:1.9}
+    .post-content .icerik p{margin-bottom:1.5rem}
+    .post-content .icerik h2{font-size:1.5rem;font-weight:700;color:var(--primary);margin:2.5rem 0 1rem}
+    .post-content .icerik h3{font-size:1.25rem;font-weight:700;color:var(--primary);margin:2rem 0 .75rem}
+    .post-content .icerik ul,.post-content .icerik ol{margin:1rem 0 1.5rem 1.5rem}
+    .post-content .icerik li{margin-bottom:.5rem}
+    .post-content .icerik strong{color:var(--primary)}
+    .post-content .icerik blockquote{border-left:3px solid var(--primary);padding:1rem 1.5rem;margin:1.5rem 0;background:var(--surface-container-low);font-style:italic;color:var(--secondary)}
+    .post-divider{max-width:800px;margin:0 auto;padding:0 2rem}
+    .post-divider hr{border:none;border-top:1px solid var(--outline-variant)}
+    .post-share{max-width:800px;margin:0 auto;padding:2rem;display:flex;align-items:center;gap:1rem}
+    .post-share span.label{font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--secondary)}
+    .post-share a{width:2.5rem;height:2.5rem;display:flex;align-items:center;justify-content:center;background:var(--surface-container);color:var(--primary);text-decoration:none;transition:all .3s}
+    .post-share a:hover{background:var(--primary);color:#fff}
+    .post-notfound{text-align:center;padding:12rem 2rem 6rem}
+    .post-notfound h2{font-size:2rem;color:var(--primary);margin-bottom:1rem}
+    .post-notfound p{color:var(--secondary);margin-bottom:2rem}
+    .post-notfound a{background:var(--primary);color:#fff;padding:1rem 2rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:.8125rem;text-decoration:none}
+    .post-loading{text-align:center;padding:12rem 2rem;color:var(--secondary)}
+  </style>
+</head>
+<body>
+  <nav class="nav-main"><div class="nav-inner"><a href="/" class="nav-logo"><img src="/images/logo-icon.png" alt="Doğu Patent"/><span>Doğu Patent</span></a><div class="nav-links"><a href="/">Ana Sayfa</a><a href="/hizmetlerimiz">Hizmetlerimiz</a><a href="/hakkimizda">Hakkımızda</a><a href="/blog" class="active">Blog</a><a href="/iletisim">İletişim</a><a href="/#ucretsiz-arastirma" class="nav-cta">Ücretsiz Araştırma</a></div><button class="nav-hamburger"><span class="material-symbols-outlined">menu</span></button></div><div class="nav-mobile"><a href="/">Ana Sayfa</a><a href="/hizmetlerimiz">Hizmetlerimiz</a><a href="/hakkimizda">Hakkımızda</a><a href="/blog" class="active">Blog</a><a href="/iletisim">İletişim</a></div></nav>
+  <main id="postMain"><div class="post-loading">Yazı yükleniyor...</div></main>
+  <footer class="footer-main"><div class="footer-grid"><div><div class="footer-brand">DOĞU PATENT</div><p class="footer-text">Fikri mülkiyet haklarınızın tescili ve korunmasında güvenilir çözüm ortağınız.</p></div><div><h4 class="footer-heading">İletişim</h4><a href="https://www.dogupatent.com" class="footer-link">www.dogupatent.com</a><a href="mailto:info@dogupatent.com" class="footer-link">info@dogupatent.com</a><a href="tel:08502428525" class="footer-link">0850 242 85 25</a></div><div><h4 class="footer-heading">Sayfalar</h4><a href="/" class="footer-link">Ana Sayfa</a><a href="/hizmetlerimiz" class="footer-link">Hizmetlerimiz</a><a href="/hakkimizda" class="footer-link">Hakkımızda</a><a href="/iletisim" class="footer-link">İletişim</a></div></div><div class="footer-bottom"><p>&copy; 2026 Doğu Patent. Tüm hakları saklıdır.</p><div class="footer-social"><a href="https://www.instagram.com/dogupatent" target="_blank">Instagram</a><a href="https://www.linkedin.com/company/dogupatent" target="_blank">LinkedIn</a></div></div></footer>
+  <a href="https://wa.me/908502428525" class="whatsapp-float" target="_blank" title="WhatsApp"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
+  <script src="/js/main.js"></script>
+  <script>
+    function fmtDate(iso){return new Date(iso).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});}
+    function fmtContent(t){if(t.includes('<p>')||t.includes('<h2>')||t.includes('<br>'))return t;return t.split(/\n\n+/).map(p=>p.trim()).filter(Boolean).map(p=>'<p>'+p.replace(/\n/g,'<br>')+'</p>').join('');}
+    async function loadPost(){
+      const main=document.getElementById('postMain'),slug=window.location.pathname.split('/blog/')[1];
+      if(!slug){main.innerHTML='<div class="post-notfound"><h2>Yazı bulunamadı</h2><p>Aradığınız blog yazısı mevcut değil.</p><a href="/blog">Blog\'a Dön</a></div>';return;}
+      try{
+        const r=await fetch('/api/blog/'+slug);if(!r.ok)throw new Error('404');const p=await r.json();
+        document.title=p.baslik+' | Doğu Patent Blog';
+        let h=`<section class="post-hero"><a href="/blog" class="post-back"><span class="material-symbols-outlined" style="font-size:1rem;">arrow_back</span> Blog'a Dön</a><div class="post-meta"><span class="post-tag">${p.kategori}</span><span class="post-date">${fmtDate(p.tarih)}</span><span class="post-read">${p.okumaSuresi||'5'} dk okuma</span></div><h1>${p.baslik}</h1>${p.ozet?'<p class="post-ozet">'+p.ozet+'</p>':''}</section>`;
+        if(p.gorsel)h+=`<div class="post-image"><img src="${p.gorsel}" alt="${p.baslik}"/></div>`;
+        h+=`<article class="post-content"><div class="icerik">${fmtContent(p.icerik)}</div></article><div class="post-divider"><hr/></div>`;
+        h+=`<div class="post-share"><span class="label">Paylaş:</span><a href="https://twitter.com/intent/tweet?text=${encodeURIComponent(p.baslik)}&url=${encodeURIComponent(location.href)}" target="_blank"><span class="material-symbols-outlined" style="font-size:1.125rem;">share</span></a><a href="https://wa.me/?text=${encodeURIComponent(p.baslik+' '+location.href)}" target="_blank"><span class="material-symbols-outlined" style="font-size:1.125rem;">chat</span></a><a href="mailto:?subject=${encodeURIComponent(p.baslik)}&body=${encodeURIComponent(location.href)}"><span class="material-symbols-outlined" style="font-size:1.125rem;">mail</span></a></div>`;
+        main.innerHTML=h;
+      }catch(e){main.innerHTML='<div class="post-notfound"><h2>Yazı bulunamadı</h2><p>Aradığınız blog yazısı mevcut değil veya kaldırılmış olabilir.</p><a href="/blog">Blog\'a Dön</a></div>';}
+    }
+    document.addEventListener('DOMContentLoaded',loadPost);
+  </script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel | Dogu Patent</title>
+  <link rel="icon" type="image/png" href="/images/logo-icon.png"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <style>
+    :root{--primary:#002441;--primary-container:#0f3a5f;--secondary:#5d5e5f;--error:#ba1a1a;--success:#2e7d32}
+    *{box-sizing:border-box;margin:0;padding:0}body{font-family:'Inter',sans-serif;background:#f4f5f7;color:#1b1c1c}
+    .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24}
+
+    /* Login Screen */
+    .login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--primary)}
+    .login-box{background:white;padding:3rem;width:100%;max-width:380px}
+    .login-box h1{font-size:1.125rem;font-weight:800;color:var(--primary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem}
+    .login-box p{font-size:.8125rem;color:var(--secondary);margin-bottom:2rem}
+    .login-box .field{margin-bottom:1.5rem}
+    .login-box label{display:block;font-size:.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--secondary);margin-bottom:.4rem}
+    .login-box input{width:100%;padding:.65rem .75rem;border:1px solid #ddd;font-family:'Inter',sans-serif;font-size:.875rem;outline:none;transition:border-color .2s}
+    .login-box input:focus{border-color:var(--primary)}
+    .login-box button{width:100%;padding:.75rem;background:var(--primary);color:white;border:none;font-family:'Inter',sans-serif;font-size:.8125rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .2s}
+    .login-box button:hover{background:var(--primary-container)}
+    .login-box button:disabled{opacity:.5;cursor:not-allowed}
+    .login-error{color:var(--error);font-size:.8125rem;margin-bottom:1rem;display:none}
+
+    /* Admin Layout */
+    .admin-wrap{display:none}
+    .admin-header{background:var(--primary);color:white;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50}
+    .admin-header h1{font-size:1rem;font-weight:700;letter-spacing:.05em}
+    .admin-header-right{display:flex;align-items:center;gap:1.5rem}
+    .admin-header a,.admin-header button{color:rgba(255,255,255,.7);font-size:.8125rem;text-decoration:none;background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif}
+    .admin-header a:hover,.admin-header button:hover{color:white}
+    .admin-body{max-width:1100px;margin:2rem auto;padding:0 1.5rem}
+    .tabs{display:flex;gap:0;margin-bottom:2rem;border-bottom:2px solid #e0e0e0}
+    .tab{padding:.75rem 1.5rem;font-size:.8125rem;font-weight:600;color:var(--secondary);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s}
+    .tab.active{color:var(--primary);border-bottom-color:var(--primary)}.tab:hover{color:var(--primary)}
+    .tab-content{display:none}.tab-content.active{display:block}
+    .card{background:white;border:1px solid #e8e8e8;padding:1.5rem;margin-bottom:1rem}
+    .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+    .card-header h2{font-size:1rem;font-weight:700;color:var(--primary)}
+    .post-item{display:flex;gap:1rem;align-items:center;padding:1rem;border-bottom:1px solid #f0f0f0;transition:background .2s}
+    .post-item:hover{background:#f8f9fa}.post-item:last-child{border-bottom:none}
+    .post-thumb{width:60px;height:60px;background:#eee;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center}
+    .post-thumb img{width:100%;height:100%;object-fit:cover}.post-thumb .material-symbols-outlined{color:#ccc}
+    .post-info{flex:1;min-width:0}
+    .post-info h4{font-size:.875rem;font-weight:600;color:var(--primary);margin-bottom:.25rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .post-info .post-meta{font-size:.75rem;color:var(--secondary);display:flex;gap:1rem;flex-wrap:wrap}
+    .post-badge{font-size:.625rem;font-weight:700;padding:.15rem .5rem;text-transform:uppercase;letter-spacing:.05em}
+    .post-badge.yayinda{background:#e8f5e9;color:var(--success)}.post-badge.taslak{background:#fff3e0;color:#e65100}
+    .post-badge.one-cikan{background:#e3f2fd;color:#1565c0}
+    .post-actions{display:flex;gap:.5rem;flex-shrink:0}
+    .btn-icon{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:1px solid #e0e0e0;background:white;cursor:pointer;transition:all .2s;color:var(--secondary);text-decoration:none}
+    .btn-icon:hover{background:#f5f5f5;color:var(--primary)}.btn-icon.danger:hover{background:#fef2f2;color:var(--error);border-color:var(--error)}
+    .btn-icon .material-symbols-outlined{font-size:1rem}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+    .form-group{display:flex;flex-direction:column;gap:.4rem}.form-group.full{grid-column:span 2}
+    .form-group label{font-size:.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--secondary)}
+    .form-group input,.form-group select,.form-group textarea{padding:.6rem .75rem;border:1px solid #ddd;font-family:'Inter',sans-serif;font-size:.875rem;color:#1b1c1c;outline:none;transition:border-color .2s;background:white}
+    .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--primary)}
+    .form-group textarea{resize:vertical;min-height:200px}.form-group small{font-size:.6875rem;color:var(--secondary)}
+    .form-row{display:flex;gap:1rem;align-items:center;margin-top:.5rem}
+    .form-row label{font-size:.8125rem;color:#333;display:flex;align-items:center;gap:.5rem;cursor:pointer}
+    .form-row input[type="checkbox"]{width:1rem;height:1rem;accent-color:var(--primary)}
+    .form-actions{display:flex;gap:1rem;margin-top:1.5rem}
+    .btn{padding:.65rem 1.5rem;font-size:.8125rem;font-weight:600;border:none;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s}
+    .btn-primary{background:var(--primary);color:white}.btn-primary:hover{background:var(--primary-container)}
+    .btn-secondary{background:white;color:var(--secondary);border:1px solid #ddd}.btn-secondary:hover{background:#f5f5f5}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+    .image-preview{margin-top:.5rem}.image-preview img{max-width:200px;max-height:120px;object-fit:cover;border:1px solid #eee}
+    .toast{position:fixed;bottom:2rem;right:2rem;padding:1rem 1.5rem;font-size:.875rem;z-index:9999;transform:translateY(150%);transition:transform .4s cubic-bezier(.16,1,.3,1);max-width:400px;color:white}
+    .toast.show{transform:translateY(0)}.toast.success{background:var(--success)}.toast.error{background:var(--error)}
+    .empty-state{text-align:center;padding:4rem 2rem;color:var(--secondary)}
+    .empty-state .material-symbols-outlined{font-size:3rem;color:#ddd;margin-bottom:1rem}
+    @media(max-width:768px){.form-grid{grid-template-columns:1fr}.form-group.full{grid-column:span 1}.post-item{flex-wrap:wrap}}
+  </style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <h1>Dogu Patent</h1>
+    <p>Admin paneline erisim icin giris yapiniz.</p>
+    <div class="login-error" id="loginError"></div>
+    <form id="loginForm">
+      <div class="field"><label>Kullanici Adi</label><input type="text" id="loginUser" required autocomplete="username"/></div>
+      <div class="field"><label>Sifre</label><input type="password" id="loginPass" required autocomplete="current-password"/></div>
+      <button type="submit" id="loginBtn">Giris Yap</button>
+    </form>
+  </div>
+</div>
+
+<!-- ADMIN PANEL (hidden until login) -->
+<div class="admin-wrap" id="adminWrap">
+  <header class="admin-header">
+    <h1>DOGU PATENT — Admin Panel</h1>
+    <div class="admin-header-right">
+      <a href="/" target="_blank">Siteyi Goruntule &rarr;</a>
+      <button onclick="logout()">Cikis Yap</button>
+    </div>
+  </header>
+  <div class="admin-body">
+    <div class="tabs">
+      <div class="tab active" data-tab="blog">Blog Yazilari</div>
+      <div class="tab" data-tab="yeni">Yeni Yazi Ekle</div>
+      <div class="tab" data-tab="basvurular">Marka Basvurulari</div>
+      <div class="tab" data-tab="mesajlar">Iletisim Mesajlari</div>
+    </div>
+    <div class="tab-content active" id="tab-blog">
+      <div class="card"><div class="card-header"><h2>Blog Yazilari</h2><button class="btn btn-primary" onclick="switchTab('yeni')">+ Yeni Yazi</button></div><div id="blogList"><div class="empty-state"><span class="material-symbols-outlined">hourglass_top</span><p>Yukleniyor...</p></div></div></div>
+    </div>
+    <div class="tab-content" id="tab-yeni">
+      <div class="card">
+        <div class="card-header"><h2 id="formTitle">Yeni Blog Yazisi</h2></div>
+        <form id="blogForm" enctype="multipart/form-data">
+          <input type="hidden" id="editId" value=""/>
+          <div class="form-grid">
+            <div class="form-group full"><label>Baslik *</label><input type="text" id="baslik" required placeholder="Yazi basligini girin"/></div>
+            <div class="form-group"><label>Kategori</label><select id="kategori"><option value="Genel">Genel</option><option value="Marka Guncellemeleri">Marka Guncellemeleri</option><option value="Patent">Patent</option><option value="Tasarim">Tasarim</option><option value="Hukuki Bilgi">Hukuki Bilgi</option><option value="Guncel Haberler">Guncel Haberler</option><option value="Bilgilendirme">Bilgilendirme</option></select></div>
+            <div class="form-group"><label>Okuma Suresi (dk)</label><input type="number" id="okumaSuresi" value="5" min="1" max="60"/></div>
+            <div class="form-group full"><label>Ozet</label><input type="text" id="ozet" placeholder="Blog listesinde gorunecek kisa aciklama"/><small>Bu metin blog kartlarinda gorunur</small></div>
+            <div class="form-group full"><label>Gorsel</label><input type="file" id="gorsel" accept="image/*"/><div class="image-preview" id="imagePreview"></div><small>Maks 5MB. JPG, PNG formatlari desteklenir.</small></div>
+            <div class="form-group full"><label>Icerik *</label><textarea id="icerik" required placeholder="Blog yazisinin tam icerigini buraya yazin."></textarea><small>Paragraflar arasinda bos satir birakarak yazin. HTML etiketleri de kullanabilirsiniz.</small></div>
+          </div>
+          <div class="form-row"><label><input type="checkbox" id="oneCikan"/> One cikan yazi olarak ayarla</label></div>
+          <div class="form-actions"><button type="submit" class="btn btn-primary" id="submitBtn">Yayinla</button><button type="button" class="btn btn-secondary" onclick="resetForm()">Iptal</button></div>
+        </form>
+      </div>
+    </div>
+    <div class="tab-content" id="tab-basvurular"><div class="card"><div class="card-header"><h2>Marka On Arastirma Basvurulari</h2></div><div id="basvuruList"></div></div></div>
+    <div class="tab-content" id="tab-mesajlar"><div class="card"><div class="card-header"><h2>Iletisim Mesajlari</h2></div><div id="mesajList"></div></div></div>
+  </div>
+</div>
+
+<script>
+// ===== AUTH =====
+function getToken(){return sessionStorage.getItem('adminToken')}
+function setToken(t){sessionStorage.setItem('adminToken',t)}
+function clearToken(){sessionStorage.removeItem('adminToken')}
+
+function authHeaders(){return{'x-admin-token':getToken()||''}}
+function authFetch(url,opts={}){
+  opts.headers=Object.assign(opts.headers||{},authHeaders());
+  return fetch(url,opts).then(r=>{if(r.status===401){clearToken();showLogin()}return r});
+}
+function authFetchForm(url,opts={}){
+  // For FormData, don't set Content-Type, but add token header
+  if(!opts.headers)opts.headers={};
+  opts.headers['x-admin-token']=getToken()||'';
+  return fetch(url,opts).then(r=>{if(r.status===401){clearToken();showLogin()}return r});
+}
+
+function showLogin(){document.getElementById('loginScreen').style.display='flex';document.getElementById('adminWrap').style.display='none'}
+function showAdmin(){document.getElementById('loginScreen').style.display='none';document.getElementById('adminWrap').style.display='block';loadBlogList()}
+function logout(){clearToken();showLogin()}
+
+// Check existing session on page load
+async function checkSession(){
+  const token=getToken();
+  if(!token)return showLogin();
+  try{
+    const r=await fetch('/api/admin/verify',{method:'POST',headers:{'x-admin-token':token}});
+    const d=await r.json();
+    if(d.valid)showAdmin();else{clearToken();showLogin()}
+  }catch(e){showLogin()}
+}
+
+// Login form
+document.getElementById('loginForm').addEventListener('submit',async(e)=>{
+  e.preventDefault();
+  const btn=document.getElementById('loginBtn');
+  const err=document.getElementById('loginError');
+  btn.disabled=true;btn.textContent='Giris yapiliyor...';err.style.display='none';
+  try{
+    const r=await fetch('/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kullanici:document.getElementById('loginUser').value,sifre:document.getElementById('loginPass').value})});
+    const d=await r.json();
+    if(d.success){setToken(d.token);showAdmin()}
+    else{err.textContent=d.message;err.style.display='block'}
+  }catch(ex){err.textContent='Baglanti hatasi.';err.style.display='block'}
+  btn.disabled=false;btn.textContent='Giris Yap';
+});
+
+// ===== TABS =====
+document.querySelectorAll('.tab').forEach(tab=>{tab.addEventListener('click',()=>switchTab(tab.dataset.tab))});
+function switchTab(name){document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));document.querySelectorAll('.tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab-'+name));if(name==='blog')loadBlogList();if(name==='basvurular')loadBasvurular();if(name==='mesajlar')loadMesajlar()}
+
+// ===== TOAST =====
+function showToast(msg,type='success'){let t=document.querySelector('.toast');if(!t){t=document.createElement('div');t.className='toast';document.body.appendChild(t)}t.textContent=msg;t.className='toast '+type;requestAnimationFrame(()=>t.classList.add('show'));setTimeout(()=>t.classList.remove('show'),3500)}
+
+// ===== BLOG LIST =====
+async function loadBlogList(){const c=document.getElementById('blogList');try{const r=await authFetch('/api/admin/blog');const posts=await r.json();if(!posts.length){c.innerHTML='<div class="empty-state"><span class="material-symbols-outlined">edit_note</span><p>Henuz blog yazisi yok.</p></div>';return}c.innerHTML=posts.map(p=>'<div class="post-item"><div class="post-thumb">'+(p.gorsel?'<img src="'+p.gorsel+'"/>':'<span class="material-symbols-outlined">image</span>')+'</div><div class="post-info"><h4>'+p.baslik+'</h4><div class="post-meta"><span>'+p.kategori+'</span><span>'+new Date(p.tarih).toLocaleDateString('tr-TR')+'</span><span class="post-badge '+(p.yayinda?'yayinda':'taslak')+'">'+(p.yayinda?'Yayinda':'Taslak')+'</span>'+(p.oneCikan?'<span class="post-badge one-cikan">One Cikan</span>':'')+'</div></div><div class="post-actions"><a href="/blog/'+p.slug+'" target="_blank" class="btn-icon"><span class="material-symbols-outlined">visibility</span></a><button class="btn-icon" onclick="editPost(\''+p.id+'\')"><span class="material-symbols-outlined">edit</span></button><button class="btn-icon" onclick="togglePublish(\''+p.id+'\','+p.yayinda+')"><span class="material-symbols-outlined">'+(p.yayinda?'unpublished':'publish')+'</span></button><button class="btn-icon danger" onclick="deletePost(\''+p.id+'\')"><span class="material-symbols-outlined">delete</span></button></div></div>').join('')}catch(e){c.innerHTML='<div class="empty-state"><span class="material-symbols-outlined">error</span><p>Yuklenemedi.</p></div>'}}
+
+// ===== CREATE / EDIT =====
+document.getElementById('blogForm').addEventListener('submit',async(e)=>{e.preventDefault();const btn=document.getElementById('submitBtn');btn.disabled=true;btn.textContent='Kaydediliyor...';const fd=new FormData();fd.append('baslik',document.getElementById('baslik').value);fd.append('kategori',document.getElementById('kategori').value);fd.append('ozet',document.getElementById('ozet').value);fd.append('icerik',document.getElementById('icerik').value);fd.append('okumaSuresi',document.getElementById('okumaSuresi').value);fd.append('oneCikan',document.getElementById('oneCikan').checked);const g=document.getElementById('gorsel').files[0];if(g)fd.append('gorsel',g);const eid=document.getElementById('editId').value;const url=eid?'/api/admin/blog/'+eid:'/api/admin/blog';const method=eid?'PUT':'POST';try{const r=await authFetchForm(url,{method,body:fd});const d=await r.json();if(d.success){showToast(d.message);resetForm();switchTab('blog')}else showToast(d.message,'error')}catch(err){showToast('Hata olustu.','error')}btn.disabled=false;btn.textContent=eid?'Guncelle':'Yayinla'});
+
+async function editPost(id){try{const r=await authFetch('/api/admin/blog');const posts=await r.json();const p=posts.find(x=>x.id===id);if(!p)return;document.getElementById('editId').value=p.id;document.getElementById('baslik').value=p.baslik;document.getElementById('kategori').value=p.kategori;document.getElementById('ozet').value=p.ozet;document.getElementById('icerik').value=p.icerik;document.getElementById('okumaSuresi').value=p.okumaSuresi;document.getElementById('oneCikan').checked=p.oneCikan;document.getElementById('formTitle').textContent='Yaziyi Duzenle';document.getElementById('submitBtn').textContent='Guncelle';if(p.gorsel)document.getElementById('imagePreview').innerHTML='<img src="'+p.gorsel+'"/>';switchTab('yeni')}catch(e){}}
+function resetForm(){document.getElementById('blogForm').reset();document.getElementById('editId').value='';document.getElementById('formTitle').textContent='Yeni Blog Yazisi';document.getElementById('submitBtn').textContent='Yayinla';document.getElementById('imagePreview').innerHTML=''}
+async function deletePost(id){if(!confirm('Bu yaziyi silmek istediginize emin misiniz?'))return;try{const r=await authFetch('/api/admin/blog/'+id,{method:'DELETE'});const d=await r.json();if(d.success){showToast(d.message);loadBlogList()}else showToast(d.message,'error')}catch(e){showToast('Silinemedi.','error')}}
+async function togglePublish(id,current){const fd=new FormData();fd.append('yayinda',!current);try{const r=await authFetchForm('/api/admin/blog/'+id,{method:'PUT',body:fd});const d=await r.json();if(d.success){showToast(current?'Yayindan kaldirildi.':'Yayina alindi.');loadBlogList()}}catch(e){showToast('Hata olustu.','error')}}
+document.getElementById('gorsel').addEventListener('change',(e)=>{const f=e.target.files[0];const p=document.getElementById('imagePreview');if(f){const r=new FileReader();r.onload=(ev)=>{p.innerHTML='<img src="'+ev.target.result+'"/>'};r.readAsDataURL(f)}else p.innerHTML=''});
+
+// ===== BASVURULAR & MESAJLAR =====
+async function loadBasvurular(){const c=document.getElementById('basvuruList');try{const r=await authFetch('/api/admin/basvurular');const d=await r.json();if(!d.length){c.innerHTML='<div class="empty-state"><span class="material-symbols-outlined">inbox</span><p>Henuz basvuru yok.</p></div>';return}c.innerHTML=d.reverse().map(b=>'<div class="post-item"><div class="post-info"><h4>'+b.markaAdi+' - '+b.adSoyad+'</h4><div class="post-meta"><span>'+b.eposta+'</span><span>'+b.telefon+'</span><span>'+(b.il||'-')+'</span><span>'+new Date(b.tarih).toLocaleDateString('tr-TR')+'</span></div>'+(b.ekNot?'<p style="font-size:.8125rem;color:#666;margin-top:.5rem">'+b.ekNot+'</p>':'')+'</div></div>').join('')}catch(e){c.innerHTML='<div class="empty-state"><span class="material-symbols-outlined">error</span><p>Yuklenemedi.</p></div>'}}
+async function loadMesajlar(){const c=document.getElementById('mesajList');try{const r=await authFetch('/api/admin/mesajlar');const d=await r.json();if(!d.length){c.innerHTML='<div class="empty-state"><span class="material-symbols-outlined">inbox</span><p>Henuz mesaj yok.</p></div>';return}c.innerHTML=d.reverse().map(m=>'<div class="post-item"><div class="post-info"><h4>'+m.adSoyad+' - '+m.basvuruTipi+'</h4><div class="post-meta"><span>'+m.eposta+'</span><span>'+(m.telefon||'-')+'</span><span>'+new Date(m.tarih).toLocaleDateString('tr-TR')+'</span></div><p style="font-size:.8125rem;color:#666;margin-top:.5rem">'+m.mesaj+'</p></div></div>').join('')}catch(e){c.innerHTML='<div class="empty-state"><span class="material-symbols-outlined">error</span><p>Yuklenemedi.</p></div>'}}
+
+// Init
+checkSession();
+</script>
+</body>
+</html>

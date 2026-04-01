@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Doğu Patent | Marka, Patent ve Tasarım Tescil Ofisi</title>
+  <meta name="description" content="Doğu Patent - Marka tescil, patent tescil, endüstriyel tasarım tescil ve fikri mülkiyet danışmanlığı. TÜRKPATENT yetkili vekil. 0850 242 85 25"/>
+  <link rel="icon" type="image/png" href="/images/logo-icon.png"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link href="/css/shared.css" rel="stylesheet"/>
+  <style>
+    /* Hero */
+    .hero { position: relative; min-height: 100vh; display: flex; align-items: center; overflow: hidden; background: var(--surface); padding-top: 80px; }
+    .hero-grid { max-width: 1280px; margin: 0 auto; padding: 0 2rem; width: 100%; display: grid; grid-template-columns: 5fr 7fr; gap: 3rem; align-items: center; }
+    .hero-badge { display: inline-block; padding: 0.25rem 0.75rem; background: var(--primary-container); color: #ffffff; font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 1.5rem; }
+    .hero h1 { font-size: clamp(2.5rem, 5vw, 4.5rem); font-weight: 800; color: var(--primary); line-height: 1.1; letter-spacing: -0.05em; margin-bottom: 2rem; }
+    .hero h1 .fade { color: var(--secondary); opacity: 0.4; }
+    .hero-text { font-size: 1.125rem; color: var(--secondary); margin-bottom: 2.5rem; max-width: 28rem; line-height: 1.7; }
+    .hero-buttons { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .btn-primary { background: var(--primary); color: var(--on-primary); padding: 1rem 2rem; font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; border: none; cursor: pointer; text-decoration: none; transition: all 0.3s; }
+    .btn-primary:hover { box-shadow: 0 8px 24px rgba(0,36,65,0.2); }
+    .btn-outline { border: 1px solid rgba(195,199,207,0.3); color: var(--primary); padding: 1rem 2rem; font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; background: none; cursor: pointer; text-decoration: none; transition: all 0.3s; }
+    .btn-outline:hover { background: var(--surface-container-low); }
+
+    .hero-image-wrap { position: relative; height: 600px; }
+    .hero-image-bg { position: absolute; inset: 0; background: var(--surface-container-high); transform: translate(12px, 12px); }
+    .hero-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%) brightness(0.9); transition: filter 0.7s; }
+    .hero-image:hover { filter: grayscale(0); }
+    .hero-stat { position: absolute; bottom: 2rem; left: -2rem; background: var(--primary); padding: 1.25rem 1.5rem; z-index: 2; }
+    .hero-stat span { display: block; font-size: 1.75rem; font-weight: 900; color: white; margin-bottom: 0.25rem; }
+    .hero-stat p { font-size: 0.625rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--on-primary-container); }
+
+    /* Services */
+    .services { padding: 6rem 0; background: var(--surface-container-low); }
+    .section-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 4rem; flex-wrap: wrap; gap: 1rem; }
+    .section-label { font-size: 0.6875rem; font-weight: 900; letter-spacing: 0.2em; text-transform: uppercase; color: var(--primary); margin-bottom: 1rem; display: block; }
+    .section-title { font-size: clamp(2rem, 3vw, 3rem); font-weight: 800; color: var(--primary); letter-spacing: -0.05em; }
+    .section-link { font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; border-bottom: 2px solid var(--primary); padding-bottom: 2px; color: var(--primary); text-decoration: none; }
+    
+    .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; }
+    .service-card { background: var(--surface-container-lowest); padding: 3rem; min-height: 450px; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.5s; cursor: pointer; }
+    .service-card:nth-child(2) { background: var(--surface-container-high); }
+    .service-card:nth-child(3) { background: var(--surface-container-highest); }
+    .service-card:hover { background: var(--primary); color: var(--on-primary); }
+    .service-card:hover .service-icon { color: white; }
+    .service-card:hover h3 { color: white; }
+    .service-card:hover p { color: var(--on-primary-container); }
+    .service-card:hover .service-more { color: white; }
+    .service-icon { font-size: 2.5rem; color: var(--primary); margin-bottom: 2rem; transition: color 0.5s; }
+    .service-card h3 { font-size: 1.5rem; font-weight: 700; color: var(--primary); margin-bottom: 1rem; transition: color 0.5s; }
+    .service-card p { color: var(--secondary); line-height: 1.7; transition: color 0.5s; }
+    .service-more { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--primary); margin-top: 2rem; text-decoration: none; transition: color 0.5s; }
+
+    /* Why Us */
+    .why-us { padding: 6rem 0; }
+    .why-grid { display: grid; grid-template-columns: 4fr 8fr; gap: 2rem; }
+    .why-content h2 { font-size: 2.5rem; font-weight: 800; color: var(--primary); letter-spacing: -0.05em; margin-bottom: 2rem; line-height: 1.2; }
+    .why-content p { color: var(--secondary); line-height: 1.7; margin-bottom: 2rem; }
+    .why-list { list-style: none; }
+    .why-list li { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem; }
+    .why-list h4 { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--primary); margin-bottom: 0.25rem; }
+    .why-list p { font-size: 0.875rem; color: var(--secondary); }
+    .why-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+    .why-card { padding: 2rem; display: flex; flex-direction: column; justify-content: flex-end; min-height: 250px; }
+    .why-card .num { font-size: 3rem; font-weight: 900; opacity: 0.1; margin-bottom: 1rem; }
+    .why-card h3 { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .why-card p { font-size: 0.875rem; }
+    .why-card:nth-child(1) { background: var(--surface-container); color: var(--primary); }
+    .why-card:nth-child(2) { background: var(--primary); color: white; }
+    .why-card:nth-child(2) p { color: var(--on-primary-container); }
+    .why-card:nth-child(3) { background: var(--surface-container-high); color: var(--primary); grid-column: span 2; }
+
+    /* Clients */
+    .clients { padding: 5rem 0; border-top: 1px solid rgba(195,199,207,0.1); }
+    .clients-label { text-align: center; font-size: 0.6875rem; font-weight: 900; letter-spacing: 0.2em; text-transform: uppercase; color: var(--primary); margin-bottom: 3rem; }
+    .clients-logos { display: flex; flex-wrap: wrap; justify-content: center; gap: 3rem; opacity: 0.3; transition: opacity 0.5s; }
+    .clients-logos:hover { opacity: 0.8; }
+    .clients-logos span { font-size: 1.5rem; font-weight: 700; color: var(--primary); letter-spacing: -0.05em; }
+
+    /* CTA Section */
+    .cta-section { position: relative; padding: 6rem 0; overflow: hidden; }
+    .cta-bg { position: absolute; inset: 0; background: var(--primary); }
+    .cta-bg img { width: 100%; height: 100%; object-fit: cover; opacity: 0.15; mix-blend-mode: overlay; }
+    .cta-inner { position: relative; z-index: 1; max-width: 1280px; margin: 0 auto; padding: 0 2rem; }
+    .cta-box { background: rgba(255,255,255,0.08); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); padding: 3rem 5rem; display: flex; justify-content: space-between; align-items: center; gap: 3rem; flex-wrap: wrap; }
+    .cta-box h2 { font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 900; color: white; letter-spacing: -0.05em; margin-bottom: 1.5rem; }
+    .cta-box p { color: var(--on-primary-container); font-size: 1.125rem; max-width: 30rem; }
+    .cta-actions { display: flex; flex-direction: column; gap: 1rem; width: 100%; max-width: 360px; }
+    .cta-action { display: flex; align-items: center; justify-content: space-between; gap: 2rem; padding: 1.5rem; font-weight: 700; font-size: 1.125rem; text-decoration: none; transition: all 0.3s; }
+    .cta-action.white { background: white; color: var(--primary); }
+    .cta-action.white:hover { background: var(--surface-container-low); }
+    .cta-action.bordered { border: 1px solid rgba(255,255,255,0.3); color: white; }
+    .cta-action.bordered:hover { background: rgba(255,255,255,0.1); }
+
+    /* Free Search Section */
+    .free-search { padding: 6rem 0; background: var(--surface-container); }
+    .free-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; }
+    .free-info h2 { font-size: clamp(2rem, 3vw, 3rem); font-weight: 800; color: var(--primary); letter-spacing: -0.05em; line-height: 1.2; margin-bottom: 2rem; }
+    .free-info p { font-size: 1.125rem; color: var(--secondary); line-height: 1.7; max-width: 32rem; margin-bottom: 2rem; }
+    .free-features { list-style: none; }
+    .free-features li { display: flex; align-items: center; gap: 0.75rem; color: var(--primary); font-weight: 700; font-size: 0.875rem; letter-spacing: 0.02em; text-transform: uppercase; margin-bottom: 1rem; }
+    .form-panel { background: white; padding: 2.5rem 4rem; box-shadow: 0 20px 40px rgba(0,36,65,0.06); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem 3rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
+    .form-group.full { grid-column: span 2; }
+    .form-label { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.1em; color: var(--secondary); text-transform: uppercase; }
+    .form-input { border: none; border-bottom: 2px solid rgba(195,199,207,0.3); background: transparent; padding: 0.5rem 0; font-size: 1rem; color: var(--primary); font-family: 'Inter', sans-serif; transition: border-color 0.3s; outline: none; }
+    .form-input:focus { border-bottom-color: var(--primary); }
+    .form-input::placeholder { color: var(--outline-variant); }
+    .form-textarea { resize: none; }
+    .form-submit-wrap { grid-column: span 2; margin-top: 2rem; }
+    .form-submit { width: 100%; background: var(--primary); color: white; padding: 1.25rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.2em; font-size: 0.875rem; border: none; cursor: pointer; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); transition: all 0.3s; font-family: 'Inter', sans-serif; }
+    .form-submit:hover { background: var(--primary-container); }
+    .form-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+    .form-kvkk { font-size: 0.5rem; text-transform: uppercase; letter-spacing: 0.1em; text-align: center; margin-top: 1rem; opacity: 0.5; }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      .hero-image-wrap { height: 400px; display: none; }
+      .hero-stat { display: none; }
+      .services-grid { grid-template-columns: 1fr; }
+      .why-grid { grid-template-columns: 1fr; }
+      .why-cards { grid-template-columns: 1fr; }
+      .why-card:nth-child(3) { grid-column: span 1; }
+      .cta-box { padding: 2rem; }
+      .free-grid { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-group.full { grid-column: span 1; }
+      .form-submit-wrap { grid-column: span 1; }
+      .form-panel { padding: 2rem; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="nav-main">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <img src="/images/logo-icon.png" alt="Doğu Patent"/>
+        <span>Doğu Patent</span>
+      </a>
+      <div class="nav-links">
+        <a href="/" class="active">Ana Sayfa</a>
+        <a href="/hizmetlerimiz">Hizmetlerimiz</a>
+        <a href="/hakkimizda">Hakkımızda</a>
+        <a href="/blog">Blog</a>
+        <a href="/iletisim">İletişim</a>
+        <a href="#ucretsiz-arastirma" class="nav-cta">Ücretsiz Araştırma</a>
+      </div>
+      <button class="nav-hamburger">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+    </div>
+    <div class="nav-mobile">
+      <a href="/" class="active">Ana Sayfa</a>
+      <a href="/hizmetlerimiz">Hizmetlerimiz</a>
+      <a href="/hakkimizda">Hakkımızda</a>
+      <a href="/blog">Blog</a>
+      <a href="/iletisim">İletişim</a>
+      <a href="#ucretsiz-arastirma" class="nav-cta" style="display:inline-block;text-align:center;">Ücretsiz Araştırma</a>
+    </div>
+  </nav>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-grid">
+        <div>
+          <span class="hero-badge">Fikri Mülkiyet Koruma</span>
+          <h1>Markanızı ve Fikirlerinizi <span class="fade">Koruma Altına Alın.</span></h1>
+          <p class="hero-text">Fikri mülkiyet haklarınızın tescili, korunması ve yönetimi için TÜRKPATENT yetkili vekillik kapsamında profesyonel hukuk kadromuzla yanınızdayız.</p>
+          <div class="hero-buttons">
+            <a href="#ucretsiz-arastirma" class="btn-primary">Ücretsiz Araştırma</a>
+            <a href="/hizmetlerimiz" class="btn-outline">Hizmetlerimiz</a>
+          </div>
+        </div>
+        <div class="hero-image-wrap">
+          <div class="hero-image-bg"></div>
+          <img src="/images/logo-full.jpg" alt="Doğu Patent" class="hero-image" style="object-fit: contain; background: white; padding: 3rem;"/>
+          <div class="hero-stat">
+            <span>10+</span>
+            <p>Yıllık Tecrübe</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Services -->
+    <section class="services">
+      <div class="container">
+        <div class="section-header">
+          <div>
+            <span class="section-label">Uzmanlık Alanlarımız</span>
+            <h2 class="section-title">Fikri Mülkiyet Çözümleri</h2>
+          </div>
+          <a href="/hizmetlerimiz" class="section-link">Tüm Hizmetler</a>
+        </div>
+        <div class="services-grid">
+          <a href="/hizmetlerimiz#marka" class="service-card" style="text-decoration:none; color:inherit;">
+            <div>
+              <span class="material-symbols-outlined service-icon">verified_user</span>
+              <h3>Marka Tescili</h3>
+              <p>Markanızın Türkiye ve dünya genelinde koruma altına alınması. TÜRKPATENT nezdinde marka başvurusu, takip ve tescil süreçleri.</p>
+            </div>
+            <div class="service-more">
+              <span>İncele</span>
+              <span class="material-symbols-outlined" style="font-size:1rem;">arrow_forward</span>
+            </div>
+          </a>
+          <a href="/hizmetlerimiz#patent" class="service-card" style="text-decoration:none; color:inherit;">
+            <div>
+              <span class="material-symbols-outlined service-icon">lightbulb</span>
+              <h3>Patent Tescili</h3>
+              <p>Buluşlarınızın teknik ve hukuki analizlerinin yapılarak patent veya faydalı model ile korunması. 20 yıla kadar koruma süresi.</p>
+            </div>
+            <div class="service-more">
+              <span>İncele</span>
+              <span class="material-symbols-outlined" style="font-size:1rem;">arrow_forward</span>
+            </div>
+          </a>
+          <a href="/hizmetlerimiz#tasarim" class="service-card" style="text-decoration:none; color:inherit;">
+            <div>
+              <span class="material-symbols-outlined service-icon">draw</span>
+              <h3>Tasarım Tescili</h3>
+              <p>Estetik ve özgün tasarımlarınızın kopyalanmaya karşı yasal güvence altına alınması. Endüstriyel tasarım tescil hizmeti.</p>
+            </div>
+            <div class="service-more">
+              <span>İncele</span>
+              <span class="material-symbols-outlined" style="font-size:1rem;">arrow_forward</span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Why Us -->
+    <section class="why-us">
+      <div class="container">
+        <div class="why-grid">
+          <div class="why-content">
+            <h2>Bizi Neden Seçmelisiniz?</h2>
+            <p>TÜRKPATENT yetkili vekillik kapsamında uluslararası standartlarda hizmet anlayışımızla, sadece tescil değil, kapsamlı bir fikri mülkiyet yönetimi sunuyoruz.</p>
+            <ul class="why-list">
+              <li>
+                <span class="material-symbols-outlined" style="color:var(--primary);margin-top:2px;">check_circle</span>
+                <div>
+                  <h4>Hukuki Güvence</h4>
+                  <p>Tüm süreçler uzman avukat ve marka vekilleri denetiminde yürütülür.</p>
+                </div>
+              </li>
+              <li>
+                <span class="material-symbols-outlined" style="color:var(--primary);margin-top:2px;">public</span>
+                <div>
+                  <h4>Uluslararası Ağ</h4>
+                  <p>PCT ve Madrid Protokolü kapsamında 150'den fazla ülkede işlem yapabilme kabiliyeti.</p>
+                </div>
+              </li>
+              <li>
+                <span class="material-symbols-outlined" style="color:var(--primary);margin-top:2px;">speed</span>
+                <div>
+                  <h4>Hızlı Süreç</h4>
+                  <p>24 saat içinde ön araştırma dönüşü, şeffaf süreç takibi.</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+          <div class="why-cards">
+            <div class="why-card">
+              <div class="num">01</div>
+              <h3>Bütünsel Analiz</h3>
+              <p>Başvuru öncesi kapsamlı benzerlik ve teknik analiz raporları sunuyoruz.</p>
+            </div>
+            <div class="why-card">
+              <div class="num">02</div>
+              <h3>Şeffaf Süreç</h3>
+              <p>Her adımda anlık bilgilendirme ve dijital takip sistemi.</p>
+            </div>
+            <div class="why-card">
+              <div class="num">03</div>
+              <h3>Sektörel Uzmanlık</h3>
+              <p>Avukat ve marka vekillerinden oluşan multidisipliner ekibimizle karmaşık tescil süreçlerinde yanınızdayız.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="clients">
+      <div class="container">
+        <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:2rem; text-align:center; padding: 2rem 0; align-items: start;">
+          <div>
+            <p style="font-size:2.5rem; font-weight:900; color:var(--primary); letter-spacing:-0.05em;">1500+</p>
+            <p style="font-size:0.6875rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--secondary); margin-top:0.5rem;">Tescilli Marka</p>
+          </div>
+          <div>
+            <p style="font-size:2.5rem; font-weight:900; color:var(--primary); letter-spacing:-0.05em; white-space:nowrap;">24 Saat</p>
+            <p style="font-size:0.6875rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--secondary); margin-top:0.5rem;">Ön Araştırma Dönüşü</p>
+          </div>
+          <div>
+            <p style="font-size:2.5rem; font-weight:900; color:var(--primary); letter-spacing:-0.05em;">150+</p>
+            <p style="font-size:0.6875rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--secondary); margin-top:0.5rem;">Ülkede Koruma İmkânı</p>
+          </div>
+          <div>
+            <p style="font-size:2.5rem; font-weight:900; color:var(--primary); letter-spacing:-0.05em;">10+</p>
+            <p style="font-size:0.6875rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--secondary); margin-top:0.5rem;">Yıllık Tecrübe</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section">
+      <div class="cta-bg"></div>
+      <div class="cta-inner">
+        <div class="cta-box">
+          <div>
+            <h2>Fikriniz Değerlidir.</h2>
+            <p>Uzman ekibimizle tanışmak ve fikri mülkiyet yolculuğunuzu başlatmak için hemen bizimle iletişime geçin.</p>
+          </div>
+          <div class="cta-actions">
+            <a href="tel:08502428525" class="cta-action white">
+              <span>0850 242 85 25</span>
+              <span class="material-symbols-outlined">call</span>
+            </a>
+            <a href="mailto:info@dogupatent.com" class="cta-action bordered">
+              <span>info@dogupatent.com</span>
+              <span class="material-symbols-outlined">mail</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Free Trademark Search -->
+    <section class="free-search" id="ucretsiz-arastirma">
+      <div class="container">
+        <div class="free-grid">
+          <div class="free-info">
+            <span class="section-label">Hızlı & Ücretsiz</span>
+            <h2>Markanız Tescile Uygun mu? Hemen Öğrenin.</h2>
+            <p>Marka bilgilerinizi bırakın, TÜRKPATENT veritabanında benzerlik taraması yapalım ve sonuçları sizinle paylaşalım. Hiçbir ücret veya taahhüt gerektirmez.</p>
+            <ul class="free-features">
+              <li>
+                <span class="material-symbols-outlined">timer</span>
+                <span>24 saat içinde dönüş</span>
+              </li>
+              <li>
+                <span class="material-symbols-outlined">verified</span>
+                <span>Uzman taraması</span>
+              </li>
+              <li>
+                <span class="material-symbols-outlined">category</span>
+                <span>Nice sınıf önerisi</span>
+              </li>
+            </ul>
+          </div>
+          <div class="form-panel">
+            <form class="form-grid marka-arastirma-form">
+              <div class="form-group">
+                <label class="form-label">Tescil Edilecek Marka Adı *</label>
+                <input type="text" name="markaAdi" class="form-input" placeholder="Örn: Doğu Patent" required/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Faaliyet Alanı / Sektör</label>
+                <input type="text" name="sektor" class="form-input" placeholder="Örn: Teknoloji, Gıda, Tekstil..."/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Ad Soyad / Unvan *</label>
+                <input type="text" name="adSoyad" class="form-input" placeholder="Kişi / Şirket Adı" required/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Telefon *</label>
+                <input type="tel" name="telefon" class="form-input" placeholder="0532 000 00 00" required/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">E-posta *</label>
+                <input type="email" name="eposta" class="form-input" placeholder="ornek@mail.com" required/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">İl</label>
+                <input type="text" name="il" class="form-input" placeholder="İl Yazınız"/>
+              </div>
+              <div class="form-group full">
+                <label class="form-label">Ek Not</label>
+                <textarea name="ekNot" class="form-input form-textarea" rows="3" placeholder="Markanız hakkında eklemek istediğiniz detaylar..."></textarea>
+              </div>
+              <div class="form-submit-wrap">
+                <button type="submit" class="form-submit">ÜCRETSİZ ARAŞTIRMA BAŞLAT</button>
+                <p class="form-kvkk">Kişisel verileriniz 6698 sayılı KVKK kapsamında korunmaktadır.</p>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer-main">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">DOĞU PATENT</div>
+        <p class="footer-text">Fikri mülkiyet haklarınızın tescili ve korunmasında güvenilir çözüm ortağınız. TÜRKPATENT yetkili vekil.</p>
+      </div>
+      <div>
+        <h4 class="footer-heading">İletişim</h4>
+        <a href="https://www.dogupatent.com" class="footer-link">www.dogupatent.com</a>
+        <a href="mailto:info@dogupatent.com" class="footer-link">info@dogupatent.com</a>
+        <a href="tel:08502428525" class="footer-link">0850 242 85 25</a>
+      </div>
+      <div>
+        <h4 class="footer-heading">Hızlı Bağlantılar</h4>
+        <a href="/hizmetlerimiz" class="footer-link">Hizmetlerimiz</a>
+        <a href="/hakkimizda" class="footer-link">Hakkımızda</a>
+        <a href="/blog" class="footer-link">Blog</a>
+        <a href="/iletisim" class="footer-link">İletişim</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 Doğu Patent. Tüm hakları saklıdır.</p>
+      <div class="footer-social">
+        <a href="https://www.instagram.com/dogupatent" target="_blank">Instagram</a>
+        <a href="https://www.linkedin.com/company/dogupatent" target="_blank">LinkedIn</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- WhatsApp Button -->
+  <a href="https://wa.me/908502428525?text=Merhaba,%20marka%20tescil%20hakkında%20bilgi%20almak%20istiyorum." class="whatsapp-float" target="_blank" title="WhatsApp ile iletişime geçin">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+  </a>
+
+  <script src="/js/main.js"></script>
+</body>
+</html>

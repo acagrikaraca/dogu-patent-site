@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Blog | Doğu Patent</title>
+  <meta name="description" content="Doğu Patent blog - Marka tescil, patent, fikri mülkiyet hukuku ve güncel gelişmeler."/>
+  <link rel="icon" type="image/png" href="/images/logo-icon.png"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link href="/css/shared.css" rel="stylesheet"/>
+  <style>
+    .blog-hero { padding: 10rem 2rem 4rem; max-width: 1280px; margin: 0 auto; display: grid; grid-template-columns: 8fr 4fr; gap: 2rem; align-items: end; }
+    .blog-hero .label { font-size: 0.6875rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--secondary); margin-bottom: 1rem; display: block; }
+    .blog-hero h1 { font-size: clamp(3rem, 5vw, 5rem); font-weight: 900; letter-spacing: -0.05em; color: var(--primary); line-height: 1.1; }
+    .blog-hero-aside { padding-bottom: 1rem; }
+    .blog-hero-aside p { font-size: 1.125rem; color: var(--secondary); line-height: 1.6; border-left: 2px solid var(--primary-container); padding-left: 1.5rem; }
+    .blog-grid { max-width: 1280px; margin: 0 auto; padding: 3rem 2rem 6rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
+    .blog-card { display: flex; flex-direction: column; text-decoration: none; color: inherit; }
+    .blog-card-image { aspect-ratio: 4/3; overflow: hidden; margin-bottom: 1.5rem; background: var(--surface-container); }
+    .blog-card-image img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%); transition: all 0.5s; }
+    .blog-card:hover .blog-card-image img { filter: grayscale(0); transform: scale(1.02); }
+    .blog-card-image .placeholder-icon { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+    .blog-card-image .placeholder-icon .material-symbols-outlined { font-size: 4rem; color: var(--outline-variant); }
+    .blog-card .tag { font-size: 0.625rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--secondary); }
+    .blog-card h3 { font-size: 1.25rem; font-weight: 700; color: var(--primary); margin: 0.75rem 0 1rem; line-height: 1.4; }
+    .blog-card p.ozet { font-size: 0.875rem; color: var(--on-surface-variant); line-height: 1.6; margin-bottom: 1.5rem; flex: 1; }
+    .blog-card .read-more { font-size: 0.75rem; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; border-bottom: 1px solid var(--outline-variant); padding-bottom: 2px; color: var(--primary); display: inline-block; transition: border-color 0.3s; }
+    .blog-card:hover .read-more { border-bottom-color: var(--primary); }
+    .blog-card .tarih { font-size: 0.625rem; color: var(--outline); margin-top: 0.75rem; }
+    .blog-card.highlight { background: var(--primary-container); padding: 2rem; justify-content: space-between; }
+    .blog-card.highlight .blog-card-image { display: none; }
+    .blog-card.highlight .tag { color: var(--on-primary-container); }
+    .blog-card.highlight h3 { color: white; font-size: 1.5rem; }
+    .blog-card.highlight p.ozet { color: var(--on-primary-container); }
+    .blog-card.highlight .read-more { color: white; border-bottom-color: rgba(255,255,255,0.3); }
+    .blog-card.highlight .meta { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
+    .blog-card.highlight .meta span { font-size: 0.625rem; color: var(--on-primary-container); }
+    .blog-card.highlight .tarih { color: var(--on-primary-container); }
+    .blog-card.wide { grid-column: span 2; background: var(--surface-container-high); padding: 3rem; display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; }
+    .blog-card.wide .blog-card-image { margin-bottom: 0; height: 100%; aspect-ratio: auto; min-height: 200px; }
+    .blog-empty { grid-column: span 3; text-align: center; padding: 6rem 2rem; }
+    .blog-empty .material-symbols-outlined { font-size: 4rem; color: var(--outline-variant); margin-bottom: 1rem; }
+    .blog-empty h3 { font-size: 1.5rem; color: var(--primary); margin-bottom: 0.5rem; }
+    .blog-empty p { color: var(--secondary); }
+    .blog-loading { grid-column: span 3; text-align: center; padding: 4rem; color: var(--secondary); }
+    .newsletter { padding: 6rem 0; background: var(--surface-container-lowest); border-top: 1px solid rgba(195,199,207,0.1); border-bottom: 1px solid rgba(195,199,207,0.1); }
+    .newsletter-grid { max-width: 1280px; margin: 0 auto; padding: 0 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+    .newsletter h2 { font-size: 2.5rem; font-weight: 900; color: var(--primary); letter-spacing: -0.05em; text-transform: uppercase; margin-bottom: 1rem; }
+    .newsletter p { color: var(--secondary); font-size: 1.125rem; max-width: 28rem; }
+    .newsletter form { display: flex; flex-direction: column; gap: 1.5rem; }
+    .newsletter label.form-label { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.1em; color: var(--primary); display: block; margin-bottom: 0.5rem; }
+    .newsletter input[type="email"] { width: 100%; background: transparent; border: none; border-bottom: 1px solid rgba(195,199,207,0.3); padding: 1rem 0; color: var(--primary); font-size: 1rem; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.3s; }
+    .newsletter input[type="email"]:focus { border-bottom-color: var(--primary); }
+    .newsletter .consent { display: flex; align-items: center; gap: 1rem; }
+    .newsletter .consent input[type="checkbox"] { width: 1rem; height: 1rem; accent-color: var(--primary); }
+    .newsletter .consent label { font-size: 0.75rem; color: var(--secondary); }
+    .newsletter button { align-self: flex-start; background: var(--primary); color: white; padding: 1rem 2.5rem; font-size: 0.75rem; font-weight: 900; letter-spacing: 0.2em; text-transform: uppercase; border: none; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.3s; }
+    .newsletter button:hover { background: var(--primary-container); }
+    @media (max-width: 768px) {
+      .blog-hero { grid-template-columns: 1fr; }
+      .blog-grid { grid-template-columns: 1fr; }
+      .blog-card.wide { grid-column: span 1; grid-template-columns: 1fr; }
+      .blog-empty, .blog-loading { grid-column: span 1; }
+      .newsletter-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav-main">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo"><img src="/images/logo-icon.png" alt="Doğu Patent"/><span>Doğu Patent</span></a>
+      <div class="nav-links">
+        <a href="/">Ana Sayfa</a><a href="/hizmetlerimiz">Hizmetlerimiz</a><a href="/hakkimizda">Hakkımızda</a><a href="/blog" class="active">Blog</a><a href="/iletisim">İletişim</a>
+        <a href="/#ucretsiz-arastirma" class="nav-cta">Ücretsiz Araştırma</a>
+      </div>
+      <button class="nav-hamburger"><span class="material-symbols-outlined">menu</span></button>
+    </div>
+    <div class="nav-mobile"><a href="/">Ana Sayfa</a><a href="/hizmetlerimiz">Hizmetlerimiz</a><a href="/hakkimizda">Hakkımızda</a><a href="/blog" class="active">Blog</a><a href="/iletisim">İletişim</a></div>
+  </nav>
+  <main>
+    <header class="blog-hero">
+      <div><span class="label">Öngörüler ve Uzmanlık</span><h1>Blog ve Güncel Gelişmeler.</h1></div>
+      <div class="blog-hero-aside"><p>Fikri mülkiyet hukuku, marka düzenlemeleri ve güncel mevzuat değişikliklerinden haberdar olun.</p></div>
+    </header>
+    <section class="blog-grid" id="blogGrid"><div class="blog-loading">Yazılar yükleniyor...</div></section>
+    <section class="newsletter">
+      <div class="newsletter-grid">
+        <div><h2>Fikri Mülkiyet Bülteni.</h2><p>Fikri mülkiyet hukuku ve marka tescil alanındaki güncel gelişmeleri aylık olarak e-posta kutunuza alın.</p></div>
+        <div>
+          <form class="bulten-form">
+            <div><label class="form-label">E-POSTA ADRESİ</label><input type="email" name="eposta" placeholder="ornek@firma.com" required/></div>
+            <div class="consent"><input type="checkbox" id="consent" name="onay"/><label for="consent">Gizlilik politikasını ve veri işleme şartlarını kabul ediyorum.</label></div>
+            <button type="submit">Abone Ol</button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="footer-main">
+    <div class="footer-grid">
+      <div><div class="footer-brand">DOĞU PATENT</div><p class="footer-text">Fikri mülkiyet haklarınızın tescili ve korunmasında güvenilir çözüm ortağınız.</p></div>
+      <div><h4 class="footer-heading">İletişim</h4><a href="https://www.dogupatent.com" class="footer-link">www.dogupatent.com</a><a href="mailto:info@dogupatent.com" class="footer-link">info@dogupatent.com</a><a href="tel:08502428525" class="footer-link">0850 242 85 25</a></div>
+      <div><h4 class="footer-heading">Sayfalar</h4><a href="/" class="footer-link">Ana Sayfa</a><a href="/hizmetlerimiz" class="footer-link">Hizmetlerimiz</a><a href="/hakkimizda" class="footer-link">Hakkımızda</a><a href="/iletisim" class="footer-link">İletişim</a></div>
+    </div>
+    <div class="footer-bottom"><p>&copy; 2026 Doğu Patent. Tüm hakları saklıdır.</p><div class="footer-social"><a href="https://www.instagram.com/dogupatent" target="_blank">Instagram</a><a href="https://www.linkedin.com/company/dogupatent" target="_blank">LinkedIn</a></div></div>
+  </footer>
+  <a href="https://wa.me/908502428525" class="whatsapp-float" target="_blank" title="WhatsApp"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
+  <script src="/js/main.js"></script>
+  <script>
+    const PATTERN = ['normal','highlight','normal','wide','normal'];
+    const ICONS = {'Marka Güncellemeleri':'verified_user','Güncel Haberler':'trending_up','Bilgilendirme':'info','Etkileşim':'quiz','Hukuki Bilgi':'gavel','Patent':'lightbulb','Tasarım':'draw','Genel':'article'};
+    function fmtDate(iso){return new Date(iso).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});}
+    function icon(k){return ICONS[k]||'article';}
+    function img(p){return p.gorsel?`<img src="${p.gorsel}" alt="${p.baslik}"/>`:`<div class="placeholder-icon"><span class="material-symbols-outlined">${icon(p.kategori)}</span></div>`;}
+    function cardNormal(p){return `<a class="blog-card" href="/blog/${p.slug}"><div class="blog-card-image">${img(p)}</div><div><span class="tag">${p.kategori}</span><h3>${p.baslik}</h3><p class="ozet">${p.ozet}</p><span class="read-more">Devamını Oku</span><p class="tarih">${fmtDate(p.tarih)}</p></div></a>`;}
+    function cardHL(p){return `<a class="blog-card highlight" href="/blog/${p.slug}"><div><span class="tag">${p.kategori}</span><h3>${p.baslik}</h3><p class="ozet">${p.ozet}</p></div><div class="meta"><span>${p.okumaSuresi||'5'} DK OKUMA</span><span class="material-symbols-outlined" style="color:white;">${icon(p.kategori)}</span></div><p class="tarih">${fmtDate(p.tarih)}</p></a>`;}
+    function cardWide(p){return `<a class="blog-card wide" href="/blog/${p.slug}"><div class="blog-card-image">${img(p)}</div><div><span class="tag">${p.kategori}</span><h3>${p.baslik}</h3><p class="ozet">${p.ozet}</p><span class="read-more">Devamını Oku</span><p class="tarih">${fmtDate(p.tarih)}</p></div></a>`;}
+    async function loadBlog(){
+      const g=document.getElementById('blogGrid');
+      try{
+        const r=await fetch('/api/blog');const posts=await r.json();
+        if(!posts.length){g.innerHTML=`<div class="blog-empty"><span class="material-symbols-outlined">edit_note</span><h3>Henüz blog yazısı yok</h3><p>Yakında burada fikri mülkiyet dünyasına dair yazılar paylaşacağız.</p></div>`;return;}
+        const oc=posts.find(p=>p.oneCikan),diger=posts.filter(p=>!p.oneCikan),sorted=oc?[oc,...diger]:posts;
+        let h='';sorted.forEach((p,i)=>{const t=PATTERN[i%PATTERN.length];h+=t==='highlight'?cardHL(p):t==='wide'?cardWide(p):cardNormal(p);});
+        g.innerHTML=h;
+      }catch(e){g.innerHTML=`<div class="blog-empty"><span class="material-symbols-outlined">error</span><h3>Yazılar yüklenemedi</h3><p>Lütfen daha sonra tekrar deneyin.</p></div>`;}
+    }
+    document.addEventListener('DOMContentLoaded',loadBlog);
+  </script>
+</body>
+</html>

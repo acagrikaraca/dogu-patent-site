@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Hakkımızda | Doğu Patent</title>
+  <meta name="description" content="Doğu Patent hakkında. 10 yılı aşkın tecrübemizle fikri mülkiyet haklarınızı koruyoruz."/>
+  <link rel="icon" type="image/png" href="/images/logo-icon.png"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link href="/css/shared.css" rel="stylesheet"/>
+  <style>
+    .about-hero { min-height: 90vh; display: flex; align-items: center; padding: 8rem 2rem 4rem; }
+    .about-hero-grid { max-width: 1280px; margin: 0 auto; display: grid; grid-template-columns: 4fr 8fr; gap: 2rem; align-items: start; }
+    .about-hero .label { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--secondary); margin-bottom: 1rem; display: block; }
+    .about-hero h1 { font-size: clamp(2.5rem, 4vw, 3.5rem); line-height: 1.1; font-weight: 800; letter-spacing: -0.05em; color: var(--primary); margin-bottom: 2rem; }
+    .about-hero p { font-size: 1.125rem; color: var(--secondary); line-height: 1.7; }
+    .about-image { position: relative; height: 600px; overflow: hidden; }
+    .about-image img { width: 100%; height: 100%; object-fit: contain; background: white; padding: 2rem; }
+    .about-image-overlay { position: absolute; bottom: 0; left: 0; background: var(--primary); padding: 3rem; color: white; max-width: 24rem; }
+    .about-image-overlay h3 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; }
+    .about-image-overlay p { font-size: 0.875rem; opacity: 0.8; line-height: 1.6; }
+
+    .trust-section { padding: 8rem 2rem; background: var(--surface); }
+    .trust-inner { max-width: 48rem; margin: 0 auto; text-align: center; }
+    .trust-inner h2 { font-size: 2.5rem; font-weight: 700; color: var(--primary); margin-bottom: 3rem; letter-spacing: -0.02em; }
+    .trust-quote { font-size: 1.125rem; color: var(--secondary); line-height: 1.7; font-style: italic; margin-bottom: 3rem; }
+    .trust-divider { width: 6rem; height: 1px; background: var(--outline-variant); margin: 0 auto 2rem; }
+    .trust-author { font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.875rem; font-style: normal; }
+
+    .values-section { padding: 6rem 0; background: var(--surface-container-low); }
+    .values-grid { max-width: 1280px; margin: 0 auto; padding: 0 2rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; }
+    .value-card { background: var(--surface); padding: 3rem; transition: all 0.5s; }
+    .value-card:hover { background: var(--primary); color: white; }
+    .value-card:hover .material-symbols-outlined { color: white; }
+    .value-card:hover h4 { color: white; }
+    .value-card:hover p { color: var(--on-primary-container); }
+    .value-card .material-symbols-outlined { font-size: 2.5rem; color: var(--primary); margin-bottom: 1.5rem; display: block; transition: color 0.5s; }
+    .value-card h4 { font-size: 1.25rem; font-weight: 700; color: var(--primary); margin-bottom: 1rem; transition: color 0.5s; }
+    .value-card p { font-size: 0.875rem; color: var(--secondary); line-height: 1.7; transition: color 0.5s; }
+
+    .timeline-section { padding: 6rem 0; }
+    .timeline-inner { max-width: 48rem; margin: 0 auto; padding: 0 2rem; }
+    .timeline-title { font-size: 2rem; font-weight: 800; color: var(--primary); letter-spacing: -0.05em; margin-bottom: 3rem; text-align: center; }
+    .timeline-item { display: flex; gap: 2rem; margin-bottom: 3rem; align-items: flex-start; }
+    .timeline-year { font-size: 1.5rem; font-weight: 900; color: var(--primary); min-width: 5rem; opacity: 0.3; }
+    .timeline-content h4 { font-weight: 700; color: var(--primary); margin-bottom: 0.5rem; }
+    .timeline-content p { font-size: 0.875rem; color: var(--secondary); line-height: 1.6; }
+
+    @media (max-width: 768px) {
+      .about-hero-grid { grid-template-columns: 1fr; }
+      .about-image { height: 300px; }
+      .values-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav-main">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo"><img src="/images/logo-icon.png" alt="Doğu Patent"/><span>Doğu Patent</span></a>
+      <div class="nav-links">
+        <a href="/">Ana Sayfa</a><a href="/hizmetlerimiz">Hizmetlerimiz</a><a href="/hakkimizda" class="active">Hakkımızda</a><a href="/blog">Blog</a><a href="/iletisim">İletişim</a>
+        <a href="/#ucretsiz-arastirma" class="nav-cta">Ücretsiz Araştırma</a>
+      </div>
+      <button class="nav-hamburger"><span class="material-symbols-outlined">menu</span></button>
+    </div>
+    <div class="nav-mobile"><a href="/">Ana Sayfa</a><a href="/hizmetlerimiz">Hizmetlerimiz</a><a href="/hakkimizda" class="active">Hakkımızda</a><a href="/blog">Blog</a><a href="/iletisim">İletişim</a></div>
+  </nav>
+
+  <main>
+    <section class="about-hero">
+      <div class="about-hero-grid">
+        <div>
+          <span class="label">Miras ve Vizyon</span>
+          <h1>Fikri Hakların Koruyucusu.</h1>
+          <p>Doğu Patent, 10 yılı aşkın tecrübesiyle fikri mülkiyet ekosisteminde güvenilir bir çözüm ortağı olarak konumlanmıştır. Biz sadece tescil yapmıyoruz; fikirlerinizi korunan varlıklara dönüştürüyoruz.</p>
+        </div>
+        <div class="about-image">
+          <img src="/images/logo-full.jpg" alt="Doğu Patent"/>
+          <div class="about-image-overlay">
+            <h3>Küresel Koruma Kalkanı</h3>
+            <p>150'den fazla ülkede fikri mülkiyetinizi koruma altına alacak hukuki ağlara ve derin teknik uzmanlığa sahibiz.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="trust-section">
+      <div class="trust-inner">
+        <h2>Güven, Şeffaflık ve Uzmanlık</h2>
+        <p class="trust-quote">"Fikri mülkiyet, bir şirketin en değerli varlığıdır. Doğu Patent olarak bu sorumluluğun bilincindeyiz. Her müvekkilimizin inovasyon yolculuğunda onlara hukuki bir koruma kalkanı ve stratejik bir yol haritası sunuyoruz."</p>
+        <div class="trust-divider"></div>
+        <p class="trust-author">Doğu Patent Yönetim Kurulu</p>
+      </div>
+    </section>
+
+    <section class="values-section">
+      <div style="max-width:1280px;margin:0 auto;padding:0 2rem 3rem;">
+        <span style="display:block;font-size:0.6875rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--secondary);margin-bottom:1rem;">Değerlerimiz</span>
+        <h2 style="font-size:3rem;font-weight:800;letter-spacing:-0.05em;color:var(--primary);">İlkelerimiz</h2>
+      </div>
+      <div class="values-grid">
+        <div class="value-card">
+          <span class="material-symbols-outlined">shield</span>
+          <h4>Güvenilirlik</h4>
+          <p>TÜRKPATENT yetkili vekillik statüsüyle, tüm süreçleri hukuki güvence altında yönetiyoruz. Müvekkillerimizin bilgileri gizlilik prensibiyle korunur.</p>
+        </div>
+        <div class="value-card">
+          <span class="material-symbols-outlined">visibility</span>
+          <h4>Şeffaflık</h4>
+          <p>Her aşamada müvekkillerimizi bilgilendiriyoruz. Ücretlendirme, süreç takibi ve sonuçlar konusunda tam şeffaflık politikası uyguluyoruz.</p>
+        </div>
+        <div class="value-card">
+          <span class="material-symbols-outlined">school</span>
+          <h4>Uzmanlık</h4>
+          <p>Avukat ve marka vekillerinden oluşan kadromuz, fikri mülkiyet hukukunun her alanında derinlemesine bilgi ve deneyime sahiptir.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="timeline-section">
+      <div class="timeline-inner">
+        <h2 class="timeline-title">Yolculuğumuz</h2>
+        <div class="timeline-item">
+          <div class="timeline-year">2004</div>
+          <div class="timeline-content">
+            <h4>Kuruluş</h4>
+            <p>Doğu Patent, fikri mülkiyet alanında profesyonel hizmet sunmak amacıyla kuruldu.</p>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-year">2010</div>
+          <div class="timeline-content">
+            <h4>Uluslararası Genişleme</h4>
+            <p>PCT ve Madrid Protokolü kapsamında uluslararası başvuru hizmetleri portföye eklendi.</p>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-year">2018</div>
+          <div class="timeline-content">
+            <h4>Dijital Dönüşüm</h4>
+            <p>Online başvuru takip sistemi ve dijital danışmanlık hizmetleri devreye alındı.</p>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-year">2026</div>
+          <div class="timeline-content">
+            <h4>Bugün</h4>
+            <p>15.000'den fazla tescilli marka, %98 müşteri memnuniyeti ile Türkiye'nin önde gelen fikri mülkiyet ofislerinden biri.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer-main">
+    <div class="footer-grid">
+      <div><div class="footer-brand">DOĞU PATENT</div><p class="footer-text">Fikri mülkiyet haklarınızın tescili ve korunmasında güvenilir çözüm ortağınız.</p></div>
+      <div><h4 class="footer-heading">İletişim</h4><a href="https://www.dogupatent.com" class="footer-link">www.dogupatent.com</a><a href="mailto:info@dogupatent.com" class="footer-link">info@dogupatent.com</a><a href="tel:08502428525" class="footer-link">0850 242 85 25</a></div>
+      <div><h4 class="footer-heading">Sayfalar</h4><a href="/" class="footer-link">Ana Sayfa</a><a href="/hizmetlerimiz" class="footer-link">Hizmetlerimiz</a><a href="/blog" class="footer-link">Blog</a><a href="/iletisim" class="footer-link">İletişim</a></div>
+    </div>
+    <div class="footer-bottom"><p>&copy; 2026 Doğu Patent. Tüm hakları saklıdır.</p><div class="footer-social"><a href="https://www.instagram.com/dogupatent" target="_blank">Instagram</a><a href="https://www.linkedin.com/company/dogupatent" target="_blank">LinkedIn</a></div></div>
+  </footer>
+
+  <a href="https://wa.me/908502428525" class="whatsapp-float" target="_blank" title="WhatsApp"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
+  <script src="/js/main.js"></script>
+</body>
+</html>
