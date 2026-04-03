@@ -179,7 +179,7 @@ app.post('/api/iletisim', (req, res) => {
   if (!adSoyad || !eposta || !mesaj) return res.status(400).json({ success: false, message: 'Lütfen zorunlu alanları doldurun.' });
   const sub = { id: Date.now(), tarih: new Date().toISOString(), adSoyad, eposta, telefon:telefon||'', basvuruTipi:basvuruTipi||'Genel', mesaj, durum:'Okunmadı' };
   const dbPath = path.join(__dirname,'data','iletisim.json');
-  let subs = []; try { if(fs.existsSync(dbPath)) subs = JSON.parse(fs.readFileSync(dbPath,'utf-8')); } catch(e){}
+  let subs = []; try { if(fs.existsSync(dbPath)) subs = JSON.parse(fs.readFileSync(dbPath,'utf-8')); } catch(e){} 
   subs.push(sub); fs.writeFileSync(dbPath, JSON.stringify(subs,null,2),'utf-8');
   res.json({ success: true, message: 'Mesajınız başarıyla iletildi. En kısa sürede size dönüş yapacağız.' });
 });
