@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
@@ -36,6 +37,39 @@ function adminAuth(req, res, next) {
   const token = req.headers['x-admin-token'];
   if (isValidSession(token)) return next();
   res.status(401).json({ success: false, message: 'Oturum geçersiz. Lütfen giriş yapın.' });
+}
+
+// ===== Mail Gönderme Fonksiyonu =====
+async function mailGonder(konu, metinIcerik, htmlIcerik) {
+  const smtpUser = process.env.SMTP_USER;
+  const smtpPass = process.env.SMTP_PASS;
+  const alicilar = (process.env.NOTIFY_EMAILS || '').split(',').map(m => m.trim()).filter(Boolean);
+
+  if (!smtpUser || !smtpPass) {
+    console.warn('[MAIL] SMTP_USER veya SMTP_PASS tanımlı değil, mail atlanıyor.');
+    return;
+  }
+  if (alicilar.length === 0) {
+    console.warn('[MAIL] NOTIFY_EMAILS tanımlı değil, mail atlanıyor.');
+    return;
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: Number(process.env.SMTP_PORT || 587),
+    secure: String(process.env.SMTP_SECURE || 'false').toLowerCase() === 'true',
+    auth: { user: smtpUser, pass: smtpPass }
+  });
+
+  await transporter.sendMail({
+    from: process.env.MAIL_FROM || smtpUser,
+    to: alicilar.join(','),
+    subject: konu,
+    text: metinIcerik,
+    html: htmlIcerik
+  });
+
+  console.log(`[MAIL] Gönderildi -> ${alicilar.join(', ')}`);
 }
 
 // ===== Setup =====
@@ -80,7 +114,7 @@ app.get('/iletisim', (req, res) => res.sendFile(path.join(__dirname, 'views', 'i
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'views', 'admin.html')));
 app.get('/blog/:slug', (req, res) => res.sendFile(path.join(__dirname, 'views', 'blog-detay.html')));
 
-// ===== Admin Login (no middleware - this IS the login endpoint) =====
+// ===== Admin Login =====
 app.post('/api/admin/login', (req, res) => {
   const { kullanici, sifre } = req.body;
   if (kullanici === ADMIN_USER && sifre === ADMIN_PASS) {
@@ -91,7 +125,6 @@ app.post('/api/admin/login', (req, res) => {
   res.status(401).json({ success: false, message: 'Kullanıcı adı veya şifre hatalı.' });
 });
 
-// Session check endpoint
 app.post('/api/admin/verify', (req, res) => {
   const token = req.headers['x-admin-token'];
   res.json({ valid: isValidSession(token) });
@@ -165,143 +198,72 @@ app.delete('/api/admin/blog/:id', adminAuth, (req, res) => {
   res.json({ success: true, message: 'Blog yazısı silindi.' });
 });
 
-// ===== Other APIs =====
+// ===== Marka Araştırma API =====
 app.post('/api/marka-arastirma', async (req, res) => {
-  try {
-    const {
-      markaAdi,
-      sektor,
-      sektör,
-      adSoyad,
-      telefon,
-      eposta,
-      il,
-      ekNot
-    } = req.body;
+  const { markaAdi, sektor, sektör, adSoyad, telefon, eposta, il, ekNot } = req.body;
+  const sektorDegeri = sektor || sektör || '';
 
-    const sektorDegeri = sektor || sektör || '';
-
-    if (!markaAdi || !adSoyad || !telefon || !eposta) {
-      return res.status(400).json({
-        success: false,
-        message: 'Lütfen zorunlu alanları doldurun.'
-      });
-    }
-
-    const sub = {
-      id: Date.now(),
-      tarih: new Date().toISOString(),
-      markaAdi,
-      sektor: sektorDegeri,
-      adSoyad,
-      telefon,
-      eposta,
-      il: il || '',
-      ekNot: ekNot || '',
-      durum: 'Yeni'
-    };
-
-    // KAYIT
-    const dataDir = process.env.DATA_DIR || path.join(__dirname, 'data');
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
-    }
-
-    const dbPath = path.join(dataDir, 'marka-arastirma.json');
-    let subs = [];
-
-    try {
-      if (fs.existsSync(dbPath)) {
-        const raw = fs.readFileSync(dbPath, 'utf-8');
-        subs = raw ? JSON.parse(raw) : [];
-      }
-    } catch (e) {
-      console.error('JSON okuma hatası:', e);
-      subs = [];
-    }
-
-    subs.push(sub);
-    fs.writeFileSync(dbPath, JSON.stringify(subs, null, 2), 'utf-8');
-
-    // MAİL GÖNDERİMİ
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT || 587),
-      secure: String(process.env.SMTP_SECURE).toLowerCase() === 'true',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      }
-    });
-
-    const alicilar = (process.env.NOTIFY_EMAILS || '')
-      .split(',')
-      .map(m => m.trim())
-      .filter(Boolean);
-
-    const mailKonu = `Yeni Marka Araştırma Başvurusu - ${markaAdi}`;
-
-    const mailMetni = `
-Yeni marka araştırma başvurusu alındı.
-
-Referans No: ${sub.id}
-Tarih: ${sub.tarih}
-Marka Adı: ${markaAdi}
-Sektör: ${sektorDegeri}
-Ad Soyad: ${adSoyad}
-Telefon: ${telefon}
-E-posta: ${eposta}
-İl: ${il || ''}
-Ek Not: ${ekNot || ''}
-    `;
-
-    const mailHtml = `
-      <h2>Yeni Marka Araştırma Başvurusu</h2>
-      <p><strong>Referans No:</strong> ${sub.id}</p>
-      <p><strong>Tarih:</strong> ${sub.tarih}</p>
-      <p><strong>Marka Adı:</strong> ${markaAdi}</p>
-      <p><strong>Sektör:</strong> ${sektorDegeri}</p>
-      <p><strong>Ad Soyad:</strong> ${adSoyad}</p>
-      <p><strong>Telefon:</strong> ${telefon}</p>
-      <p><strong>E-posta:</strong> ${eposta}</p>
-      <p><strong>İl:</strong> ${il || ''}</p>
-      <p><strong>Ek Not:</strong> ${ekNot || ''}</p>
-    `;
-
-    if (alicilar.length > 0) {
-      await transporter.sendMail({
-        from: process.env.MAIL_FROM || process.env.SMTP_USER,
-        to: alicilar.join(','),
-        subject: mailKonu,
-        text: mailMetni,
-        html: mailHtml
-      });
-    } else {
-      console.warn('NOTIFY_EMAILS tanımlı değil, mail gönderilmedi.');
-    }
-
-    return res.json({
-      success: true,
-      message: 'Başvurunuz başarıyla alındı. 24 saat içinde uzman ekibimiz sizinle iletişime geçecektir.',
-      referansNo: sub.id
-    });
-  } catch (error) {
-    console.error('Marka araştırma hatası:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Başvuru alınırken bir hata oluştu.'
-    });
+  if (!markaAdi || !adSoyad || !telefon || !eposta) {
+    return res.status(400).json({ success: false, message: 'Lütfen zorunlu alanları doldurun.' });
   }
+
+  const sub = {
+    id: Date.now(), tarih: new Date().toISOString(),
+    markaAdi, sektor: sektorDegeri, adSoyad, telefon, eposta,
+    il: il || '', ekNot: ekNot || '', durum: 'Yeni'
+  };
+
+  // JSON'a kaydet
+  const dataDir = process.env.DATA_DIR || path.join(__dirname, 'data');
+  if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+  const dbPath = path.join(dataDir, 'marka-arastirma.json');
+  let subs = [];
+  try { if (fs.existsSync(dbPath)) subs = JSON.parse(fs.readFileSync(dbPath, 'utf-8')); } catch(e) {}
+  subs.push(sub);
+  fs.writeFileSync(dbPath, JSON.stringify(subs, null, 2), 'utf-8');
+
+  // Mail gönder (hata olsa bile başvuruyu kabul et)
+  try {
+    const tarihStr = new Date(sub.tarih).toLocaleString('tr-TR');
+    await mailGonder(
+      `Yeni Marka Araştırma Başvurusu - ${markaAdi}`,
+      `Yeni başvuru alındı.\n\nReferans No: ${sub.id}\nTarih: ${tarihStr}\nMarka Adı: ${markaAdi}\nSektör: ${sektorDegeri}\nAd Soyad: ${adSoyad}\nTelefon: ${telefon}\nE-posta: ${eposta}\nİl: ${il || '-'}\nEk Not: ${ekNot || '-'}`,
+      `<h2 style="color:#1a237e;">Yeni Marka Araştırma Başvurusu</h2>
+       <table style="border-collapse:collapse;width:100%;font-family:Arial,sans-serif;font-size:14px;">
+         <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;width:160px;">Referans No</td><td style="padding:8px;border:1px solid #ddd;">${sub.id}</td></tr>
+         <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">Tarih</td><td style="padding:8px;border:1px solid #ddd;">${tarihStr}</td></tr>
+         <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">Marka Adı</td><td style="padding:8px;border:1px solid #ddd;">${markaAdi}</td></tr>
+         <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">Sektör</td><td style="padding:8px;border:1px solid #ddd;">${sektorDegeri || '-'}</td></tr>
+         <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">Ad Soyad</td><td style="padding:8px;border:1px solid #ddd;">${adSoyad}</td></tr>
+         <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">Telefon</td><td style="padding:8px;border:1px solid #ddd;">${telefon}</td></tr>
+         <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">E-posta</td><td style="padding:8px;border:1px solid #ddd;">${eposta}</td></tr>
+         <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">İl</td><td style="padding:8px;border:1px solid #ddd;">${il || '-'}</td></tr>
+         <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">Ek Not</td><td style="padding:8px;border:1px solid #ddd;">${ekNot || '-'}</td></tr>
+       </table>`
+    );
+  } catch (mailHata) {
+    // Mail hatası başvuruyu engellemez, sadece loglanır
+    console.error('[MAIL HATA] Marka araştırma maili gönderilemedi:', mailHata.message);
+  }
+
+  return res.json({
+    success: true,
+    message: 'Başvurunuz başarıyla alındı. 24 saat içinde uzman ekibimiz sizinle iletişime geçecektir.',
+    referansNo: sub.id
+  });
 });
+
+// ===== İletişim API =====
 app.post('/api/iletisim', (req, res) => {
   const { adSoyad, eposta, telefon, basvuruTipi, mesaj } = req.body;
   if (!adSoyad || !eposta || !mesaj) return res.status(400).json({ success: false, message: 'Lütfen zorunlu alanları doldurun.' });
   const sub = { id: Date.now(), tarih: new Date().toISOString(), adSoyad, eposta, telefon:telefon||'', basvuruTipi:basvuruTipi||'Genel', mesaj, durum:'Okunmadı' };
   const dbPath = path.join(__dirname,'data','iletisim.json');
-  let subs = []; try { if(fs.existsSync(dbPath)) subs = JSON.parse(fs.readFileSync(dbPath,'utf-8')); } catch(e){} 
+  let subs = []; try { if(fs.existsSync(dbPath)) subs = JSON.parse(fs.readFileSync(dbPath,'utf-8')); } catch(e){}
   subs.push(sub); fs.writeFileSync(dbPath, JSON.stringify(subs,null,2),'utf-8');
   res.json({ success: true, message: 'Mesajınız başarıyla iletildi. En kısa sürede size dönüş yapacağız.' });
 });
+
 app.post('/api/bulten', (req, res) => {
   const { eposta, onay } = req.body;
   if (!eposta) return res.status(400).json({ success: false, message: 'Lütfen e-posta adresinizi girin.' });
@@ -312,6 +274,7 @@ app.post('/api/bulten', (req, res) => {
   fs.writeFileSync(dbPath, JSON.stringify(subs,null,2),'utf-8');
   res.json({ success: true, message: 'Bülten aboneliğiniz başarıyla oluşturuldu.' });
 });
+
 app.get('/api/admin/basvurular', adminAuth, (req, res) => {
   const dbPath = path.join(__dirname,'data','marka-arastirma.json');
   try { if(fs.existsSync(dbPath)) return res.json(JSON.parse(fs.readFileSync(dbPath,'utf-8'))); } catch(e){} res.json([]);
