@@ -254,15 +254,38 @@ app.post('/api/marka-arastirma', async (req, res) => {
 });
 
 // ===== İletişim API =====
-app.post('/api/iletisim', (req, res) => {
+app.post('/api/iletisim', async (req, res) => {
   const { adSoyad, eposta, telefon, basvuruTipi, mesaj } = req.body;
   if (!adSoyad || !eposta || !mesaj) return res.status(400).json({ success: false, message: 'Lütfen zorunlu alanları doldurun.' });
   const sub = { id: Date.now(), tarih: new Date().toISOString(), adSoyad, eposta, telefon:telefon||'', basvuruTipi:basvuruTipi||'Genel', mesaj, durum:'Okunmadı' };
   const dbPath = path.join(__dirname,'data','iletisim.json');
   let subs = []; try { if(fs.existsSync(dbPath)) subs = JSON.parse(fs.readFileSync(dbPath,'utf-8')); } catch(e){}
   subs.push(sub); fs.writeFileSync(dbPath, JSON.stringify(subs,null,2),'utf-8');
+
+  // Mail gönder
+  try {
+    const tarihStr = new Date(sub.tarih).toLocaleString('tr-TR');
+    await mailGonder(
+      `Yeni İletişim Mesajı - ${basvuruTipi || 'Genel'}`,
+      `Yeni iletişim mesajı alındı.\n\nReferans No: ${sub.id}\nTarih: ${tarihStr}\nAd Soyad: ${adSoyad}\nE-posta: ${eposta}\nTelefon: ${telefon || '-'}\nBaşvuru Tipi: ${basvuruTipi || 'Genel'}\nMesaj: ${mesaj}`,
+      `<h2 style="color:#1a237e;">Yeni İletişim Mesajı</h2>
+       <table style="border-collapse:collapse;width:100%;font-family:Arial,sans-serif;font-size:14px;">
+         <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;width:160px;">Referans No</td><td style="padding:8px;border:1px solid #ddd;">${sub.id}</td></tr>
+         <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">Tarih</td><td style="padding:8px;border:1px solid #ddd;">${tarihStr}</td></tr>
+         <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">Ad Soyad</td><td style="padding:8px;border:1px solid #ddd;">${adSoyad}</td></tr>
+         <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">E-posta</td><td style="padding:8px;border:1px solid #ddd;">${eposta}</td></tr>
+         <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">Telefon</td><td style="padding:8px;border:1px solid #ddd;">${telefon || '-'}</td></tr>
+         <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">Başvuru Tipi</td><td style="padding:8px;border:1px solid #ddd;">${basvuruTipi || 'Genel'}</td></tr>
+         <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">Mesaj</td><td style="padding:8px;border:1px solid #ddd;">${mesaj}</td></tr>
+       </table>`
+    );
+  } catch (mailHata) {
+    console.error('[MAIL HATA] İletişim maili gönderilemedi:', mailHata.message);
+  }
+
   res.json({ success: true, message: 'Mesajınız başarıyla iletildi. En kısa sürede size dönüş yapacağız.' });
 });
+
 
 app.post('/api/bulten', (req, res) => {
   const { eposta, onay } = req.body;
