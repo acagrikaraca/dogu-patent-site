@@ -72,14 +72,76 @@ async function mailGonder(konu, metinIcerik, htmlIcerik) {
   console.log(`[MAIL] Gönderildi -> ${alicilar.join(', ')}`);
 }
 
-// ===== Setup =====
-['data', 'public/uploads/blog'].forEach(dir => {
-  const p = path.join(__dirname, dir);
-  if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true });
-});
+// ===== Kalici Depolama =====
+const APP_ROOT = __dirname;
+const PUBLIC_ROOT = path.join(APP_ROOT, 'public');
+const VIEWS_ROOT = path.join(APP_ROOT, 'views');
+const LEGACY_DATA_ROOT = path.join(APP_ROOT, 'data');
+const LEGACY_BLOG_UPLOAD_DIR = path.join(PUBLIC_ROOT, 'uploads', 'blog');
+
+function resolveStoragePath(target) {
+  return path.isAbsolute(target) ? target : path.resolve(APP_ROOT, target);
+}
+
+const STORAGE_ROOT = resolveStoragePath(process.env.DATA_DIR || '../shared-data');
+const UPLOAD_ROOT = resolveStoragePath(process.env.UPLOADS_DIR || path.join(STORAGE_ROOT, 'uploads'));
+const BLOG_UPLOAD_DIR = path.join(UPLOAD_ROOT, 'blog');
+const BLOG_PUBLIC_PREFIX = '/uploads/blog';
+
+function ensureDir(dir) {
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+}
+
+function dataFile(name) {
+  return path.join(STORAGE_ROOT, name);
+}
+
+function copyFileIfMissing(source, target) {
+  if (fs.existsSync(source) && !fs.existsSync(target)) fs.copyFileSync(source, target);
+}
+
+function copyDirectoryContentsIfMissing(source, target) {
+  if (!fs.existsSync(source)) return;
+  ensureDir(target);
+
+  for (const entry of fs.readdirSync(source, { withFileTypes: true })) {
+    const src = path.join(source, entry.name);
+    const dest = path.join(target, entry.name);
+
+    if (entry.isDirectory()) {
+      copyDirectoryContentsIfMissing(src, dest);
+      continue;
+    }
+
+    if (!fs.existsSync(dest)) fs.copyFileSync(src, dest);
+  }
+}
+
+function migrateLegacyStorage() {
+  copyFileIfMissing(path.join(LEGACY_DATA_ROOT, 'blog.json'), dataFile('blog.json'));
+  copyFileIfMissing(path.join(LEGACY_DATA_ROOT, 'marka-arastirma.json'), dataFile('marka-arastirma.json'));
+  copyFileIfMissing(path.join(LEGACY_DATA_ROOT, 'iletisim.json'), dataFile('iletisim.json'));
+  copyFileIfMissing(path.join(LEGACY_DATA_ROOT, 'bulten.json'), dataFile('bulten.json'));
+  copyDirectoryContentsIfMissing(LEGACY_BLOG_UPLOAD_DIR, BLOG_UPLOAD_DIR);
+}
+
+function uploadPublicPath(filename) {
+  return `${BLOG_PUBLIC_PREFIX}/${filename}`;
+}
+
+function uploadFilePath(fileUrl) {
+  if (!fileUrl) return null;
+  const normalized = fileUrl.replace(/^\/+/, '');
+  if (!normalized.startsWith('uploads/')) return null;
+  return path.join(STORAGE_ROOT, normalized);
+}
+
+ensureDir(STORAGE_ROOT);
+ensureDir(BLOG_UPLOAD_DIR);
+migrateLegacyStorage();
 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, path.join(__dirname, 'public/uploads/blog')),
+  destination: (req, file, cb) => cb(null, BLOG_UPLOAD_DIR),
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
     cb(null, Date.now() + '-' + Math.random().toString(36).substring(7) + ext);
@@ -89,10 +151,15 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'public')));
-app.set('views', path.join(__dirname, 'views'));
+app.use('/uploads', express.static(UPLOAD_ROOT));
+app.use(express.static(PUBLIC_ROOT));
+app.set('views', VIEWS_ROOT);
 
-const BLOG_DB = path.join(__dirname, 'data', 'blog.json');
+const BLOG_DB = dataFile('blog.json');
+const MARKA_ARASTIRMA_DB = dataFile('marka-arastirma.json');
+const ILETISIM_DB = dataFile('iletisim.json');
+const BULTEN_DB = dataFile('bulten.json');
+
 function getBlogPosts() {
   try { if (fs.existsSync(BLOG_DB)) return JSON.parse(fs.readFileSync(BLOG_DB, 'utf-8')); } catch(e) {}
   return [];
@@ -106,13 +173,13 @@ function generateSlug(title) {
 }
 
 // ===== Pages =====
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'views', 'index.html')));
-app.get('/hizmetlerimiz', (req, res) => res.sendFile(path.join(__dirname, 'views', 'hizmetlerimiz.html')));
-app.get('/hakkimizda', (req, res) => res.sendFile(path.join(__dirname, 'views', 'hakkimizda.html')));
-app.get('/blog', (req, res) => res.sendFile(path.join(__dirname, 'views', 'blog.html')));
-app.get('/iletisim', (req, res) => res.sendFile(path.join(__dirname, 'views', 'iletisim.html')));
-app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'views', 'admin.html')));
-app.get('/blog/:slug', (req, res) => res.sendFile(path.join(__dirname, 'views', 'blog-detay.html')));
+app.get('/', (req, res) => res.sendFile(path.join(VIEWS_ROOT, 'index.html')));
+app.get('/hizmetlerimiz', (req, res) => res.sendFile(path.join(VIEWS_ROOT, 'hizmetlerimiz.html')));
+app.get('/hakkimizda', (req, res) => res.sendFile(path.join(VIEWS_ROOT, 'hakkimizda.html')));
+app.get('/blog', (req, res) => res.sendFile(path.join(VIEWS_ROOT, 'blog.html')));
+app.get('/iletisim', (req, res) => res.sendFile(path.join(VIEWS_ROOT, 'iletisim.html')));
+app.get('/admin', (req, res) => res.sendFile(path.join(VIEWS_ROOT, 'admin.html')));
+app.get('/blog/:slug', (req, res) => res.sendFile(path.join(VIEWS_ROOT, 'blog-detay.html')));
 
 // ===== Admin Login =====
 app.post('/api/admin/login', (req, res) => {
@@ -156,7 +223,7 @@ app.post('/api/admin/blog', adminAuth, upload.single('gorsel'), (req, res) => {
   const post = {
     id: Date.now().toString(), baslik, slug: generateSlug(baslik),
     kategori: kategori || 'Genel', ozet: ozet || '', icerik,
-    gorsel: req.file ? '/uploads/blog/' + req.file.filename : '',
+    gorsel: req.file ? uploadPublicPath(req.file.filename) : '',
     okumaSuresi: okumaSuresi || '5', oneCikan: oneCikan === 'true' || oneCikan === true,
     yayinda: true, tarih: new Date().toISOString(), guncelleme: new Date().toISOString()
   };
@@ -180,8 +247,9 @@ app.put('/api/admin/blog/:id', adminAuth, upload.single('gorsel'), (req, res) =>
   if (oneCikan === 'true' || oneCikan === true) { posts.forEach(p => p.oneCikan = false); posts[idx].oneCikan = true; }
   else if (oneCikan === 'false' || oneCikan === false) { posts[idx].oneCikan = false; }
   if (req.file) {
-    if (posts[idx].gorsel) { const old = path.join(__dirname,'public',posts[idx].gorsel); if(fs.existsSync(old)) fs.unlinkSync(old); }
-    posts[idx].gorsel = '/uploads/blog/' + req.file.filename;
+    const old = uploadFilePath(posts[idx].gorsel);
+    if (old && fs.existsSync(old)) fs.unlinkSync(old);
+    posts[idx].gorsel = uploadPublicPath(req.file.filename);
   }
   posts[idx].guncelleme = new Date().toISOString();
   saveBlogPosts(posts);
@@ -192,7 +260,8 @@ app.delete('/api/admin/blog/:id', adminAuth, (req, res) => {
   let posts = getBlogPosts();
   const post = posts.find(p => p.id === req.params.id);
   if (!post) return res.status(404).json({ success: false, message: 'Yazı bulunamadı.' });
-  if (post.gorsel) { const p = path.join(__dirname,'public',post.gorsel); if(fs.existsSync(p)) fs.unlinkSync(p); }
+  const imagePath = uploadFilePath(post.gorsel);
+  if (imagePath && fs.existsSync(imagePath)) fs.unlinkSync(imagePath);
   posts = posts.filter(p => p.id !== req.params.id);
   saveBlogPosts(posts);
   res.json({ success: true, message: 'Blog yazısı silindi.' });
@@ -214,13 +283,10 @@ app.post('/api/marka-arastirma', async (req, res) => {
   };
 
   // JSON'a kaydet
-  const dataDir = process.env.DATA_DIR || path.join(__dirname, 'data');
-  if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
-  const dbPath = path.join(dataDir, 'marka-arastirma.json');
   let subs = [];
-  try { if (fs.existsSync(dbPath)) subs = JSON.parse(fs.readFileSync(dbPath, 'utf-8')); } catch(e) {}
+  try { if (fs.existsSync(MARKA_ARASTIRMA_DB)) subs = JSON.parse(fs.readFileSync(MARKA_ARASTIRMA_DB, 'utf-8')); } catch(e) {}
   subs.push(sub);
-  fs.writeFileSync(dbPath, JSON.stringify(subs, null, 2), 'utf-8');
+  fs.writeFileSync(MARKA_ARASTIRMA_DB, JSON.stringify(subs, null, 2), 'utf-8');
 
   // Mail gönder (hata olsa bile başvuruyu kabul et)
   try {
@@ -258,9 +324,8 @@ app.post('/api/iletisim', async (req, res) => {
   const { adSoyad, eposta, telefon, basvuruTipi, mesaj } = req.body;
   if (!adSoyad || !eposta || !mesaj) return res.status(400).json({ success: false, message: 'Lütfen zorunlu alanları doldurun.' });
   const sub = { id: Date.now(), tarih: new Date().toISOString(), adSoyad, eposta, telefon:telefon||'', basvuruTipi:basvuruTipi||'Genel', mesaj, durum:'Okunmadı' };
-  const dbPath = path.join(__dirname,'data','iletisim.json');
-  let subs = []; try { if(fs.existsSync(dbPath)) subs = JSON.parse(fs.readFileSync(dbPath,'utf-8')); } catch(e){}
-  subs.push(sub); fs.writeFileSync(dbPath, JSON.stringify(subs,null,2),'utf-8');
+  let subs = []; try { if(fs.existsSync(ILETISIM_DB)) subs = JSON.parse(fs.readFileSync(ILETISIM_DB,'utf-8')); } catch(e){}
+  subs.push(sub); fs.writeFileSync(ILETISIM_DB, JSON.stringify(subs,null,2),'utf-8');
 
   // Mail gönder
   try {
@@ -290,22 +355,22 @@ app.post('/api/iletisim', async (req, res) => {
 app.post('/api/bulten', (req, res) => {
   const { eposta, onay } = req.body;
   if (!eposta) return res.status(400).json({ success: false, message: 'Lütfen e-posta adresinizi girin.' });
-  const dbPath = path.join(__dirname,'data','bulten.json');
-  let subs = []; try { if(fs.existsSync(dbPath)) subs = JSON.parse(fs.readFileSync(dbPath,'utf-8')); } catch(e){}
+  let subs = []; try { if(fs.existsSync(BULTEN_DB)) subs = JSON.parse(fs.readFileSync(BULTEN_DB,'utf-8')); } catch(e){}
   if (subs.find(s => s.eposta === eposta)) return res.json({ success: true, message: 'Bu e-posta adresi zaten kayıtlı.' });
   subs.push({ id: Date.now(), tarih: new Date().toISOString(), eposta, onay: onay||false });
-  fs.writeFileSync(dbPath, JSON.stringify(subs,null,2),'utf-8');
+  fs.writeFileSync(BULTEN_DB, JSON.stringify(subs,null,2),'utf-8');
   res.json({ success: true, message: 'Bülten aboneliğiniz başarıyla oluşturuldu.' });
 });
 
 app.get('/api/admin/basvurular', adminAuth, (req, res) => {
-  const dbPath = path.join(__dirname,'data','marka-arastirma.json');
-  try { if(fs.existsSync(dbPath)) return res.json(JSON.parse(fs.readFileSync(dbPath,'utf-8'))); } catch(e){} res.json([]);
+  try { if(fs.existsSync(MARKA_ARASTIRMA_DB)) return res.json(JSON.parse(fs.readFileSync(MARKA_ARASTIRMA_DB,'utf-8'))); } catch(e){} res.json([]);
 });
 app.get('/api/admin/mesajlar', adminAuth, (req, res) => {
-  const dbPath = path.join(__dirname,'data','iletisim.json');
-  try { if(fs.existsSync(dbPath)) return res.json(JSON.parse(fs.readFileSync(dbPath,'utf-8'))); } catch(e){} res.json([]);
+  try { if(fs.existsSync(ILETISIM_DB)) return res.json(JSON.parse(fs.readFileSync(ILETISIM_DB,'utf-8'))); } catch(e){} res.json([]);
 });
 
-app.use((req, res) => { res.status(404).sendFile(path.join(__dirname, 'views', 'index.html')); });
-app.listen(PORT, () => { console.log(`Doğu Patent web sitesi http://localhost:${PORT} adresinde çalışıyor`); });
+app.use((req, res) => { res.status(404).sendFile(path.join(VIEWS_ROOT, 'index.html')); });
+app.listen(PORT, () => {
+  console.log(`Doğu Patent web sitesi http://localhost:${PORT} adresinde çalışıyor`);
+  console.log(`[STORAGE] Veri klasoru: ${STORAGE_ROOT}`);
+});

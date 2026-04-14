@@ -1,0 +1,5 @@
+shared-data/
+dogu-patent/data/
+dogu-patent/public/uploads/
+dogu-patent/node_modules/
+dogu-patent/.env
