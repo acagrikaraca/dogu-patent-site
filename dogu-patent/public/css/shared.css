@@ -273,31 +273,5 @@ body {
 .toast.show { transform: translateY(0); }
 .toast.error { background: var(--error); }
 
-/* WhatsApp Button */
-.whatsapp-float {
-  position: fixed;
-  bottom: 2rem;
-  left: 2rem;
-  width: 56px;
-  height: 56px;
-  background: #25D366;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.4);
-  transition: transform 0.3s;
-  text-decoration: none;
-}
-
-.whatsapp-float:hover { transform: scale(1.1); }
-
-.whatsapp-float svg {
-  width: 28px;
-  height: 28px;
-  fill: white;
-}
-
 /* Utility */
 .container { max-width: 1280px; margin: 0 auto; padding: 0 2rem; }
