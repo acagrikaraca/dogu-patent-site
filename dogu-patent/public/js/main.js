@@ -42,6 +42,7 @@ function initMarkaForm() {
   forms.forEach(form => {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      if (!form.reportValidity()) return;
       
       const btn = form.querySelector('button[type="submit"]');
       const originalText = btn.textContent;
@@ -55,7 +56,9 @@ function initMarkaForm() {
         telefon: form.querySelector('[name="telefon"]').value,
         eposta: form.querySelector('[name="eposta"]').value,
         il: form.querySelector('[name="il"]')?.value || '',
-        ekNot: form.querySelector('[name="ekNot"]')?.value || ''
+        ekNot: form.querySelector('[name="ekNot"]')?.value || '',
+        kvkkOkundu: form.querySelector('[name="kvkkOkundu"]')?.checked === true,
+        kvkkVersiyon: form.dataset.kvkkVersiyon
       };
       
       try {
@@ -90,6 +93,7 @@ function initContactForm() {
   if (form) {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      if (!form.reportValidity()) return;
       
       const btn = form.querySelector('button[type="submit"]');
       const originalHTML = btn.innerHTML;
@@ -101,7 +105,9 @@ function initContactForm() {
         eposta: form.querySelector('[name="eposta"]').value,
         telefon: form.querySelector('[name="telefon"]')?.value || '',
         basvuruTipi: form.querySelector('[name="basvuruTipi"]')?.value || 'Genel',
-        mesaj: form.querySelector('[name="mesaj"]').value
+        mesaj: form.querySelector('[name="mesaj"]').value,
+        kvkkOkundu: form.querySelector('[name="kvkkOkundu"]')?.checked === true,
+        kvkkVersiyon: form.dataset.kvkkVersiyon
       };
       
       try {

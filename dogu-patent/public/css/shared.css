@@ -36,6 +36,27 @@ body {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
 
+/* Form aydınlatma beyanı */
+.kvkk-notice {
+  grid-column: 1 / -1;
+  color: var(--on-surface-variant);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.kvkk-row { display: flex; align-items: flex-start; gap: 0.75rem; }
+.kvkk-row input[type="checkbox"] {
+  flex: 0 0 1.25rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0.125rem;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+.kvkk-row input:focus-visible { outline: 3px solid var(--primary-container); outline-offset: 3px; }
+.kvkk-row label { cursor: pointer; }
+.kvkk-notice a { color: var(--primary); text-decoration: underline; text-underline-offset: 3px; font-weight: 600; }
+.kvkk-notice p { margin: 0.625rem 0 0 2rem; color: var(--secondary); font-size: 0.8125rem; }
+
 /* Navigation */
 .nav-main {
   position: fixed;
