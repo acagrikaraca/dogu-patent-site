@@ -11,8 +11,10 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ===== ADMIN CREDENTIALS (server-side only, never sent to browser) =====
-const ADMIN_USER = 'karacahukuk';
-const ADMIN_PASS = '25.karacahukuk.25';
+const ADMIN_USER = process.env.ADMIN_USER || '';
+const ADMIN_PASS = process.env.ADMIN_PASS || '';
+
+const KVKK_VERSION = '2026-10-22';
 
 // Active session tokens (in-memory, cleared on server restart)
 const activeSessions = new Map();
@@ -178,12 +180,16 @@ app.get('/hizmetlerimiz', (req, res) => res.sendFile(path.join(VIEWS_ROOT, 'hizm
 app.get('/hakkimizda', (req, res) => res.sendFile(path.join(VIEWS_ROOT, 'hakkimizda.html')));
 app.get('/blog', (req, res) => res.sendFile(path.join(VIEWS_ROOT, 'blog.html')));
 app.get('/iletisim', (req, res) => res.sendFile(path.join(VIEWS_ROOT, 'iletisim.html')));
+app.get('/kvkk-aydinlatma-metni', (req, res) => res.sendFile(path.join(VIEWS_ROOT, 'kvkk.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(VIEWS_ROOT, 'admin.html')));
 app.get('/blog/:slug', (req, res) => res.sendFile(path.join(VIEWS_ROOT, 'blog-detay.html')));
 
 // ===== Admin Login =====
 app.post('/api/admin/login', (req, res) => {
   const { kullanici, sifre } = req.body;
+  if (!ADMIN_USER || !ADMIN_PASS) {
+    return res.status(503).json({ success: false, message: 'Yönetici girişi henüz yapılandırılmadı.' });
+  }
   if (kullanici === ADMIN_USER && sifre === ADMIN_PASS) {
     const token = generateToken();
     activeSessions.set(token, { expires: Date.now() + SESSION_DURATION });
@@ -275,11 +281,15 @@ app.post('/api/marka-arastirma', async (req, res) => {
   if (!markaAdi || !adSoyad || !telefon || !eposta) {
     return res.status(400).json({ success: false, message: 'Lütfen zorunlu alanları doldurun.' });
   }
+  if (req.body.kvkkOkundu !== true || req.body.kvkkVersiyon !== KVKK_VERSION) {
+    return res.status(400).json({ success: false, message: 'Lütfen güncel Aydınlatma Metni’ni okuyup ilgili kutucuğu işaretleyin. Sayfa uzun süredir açıksa yenileyin.' });
+  }
 
   const sub = {
     id: Date.now(), tarih: new Date().toISOString(),
     markaAdi, sektor: sektorDegeri, adSoyad, telefon, eposta,
-    il: il || '', ekNot: ekNot || '', durum: 'Yeni'
+    il: il || '', ekNot: ekNot || '', durum: 'Yeni',
+    aydinlatma: { okundu: true, versiyon: KVKK_VERSION, tarih: new Date().toISOString() }
   };
 
   // JSON'a kaydet
@@ -323,7 +333,10 @@ app.post('/api/marka-arastirma', async (req, res) => {
 app.post('/api/iletisim', async (req, res) => {
   const { adSoyad, eposta, telefon, basvuruTipi, mesaj } = req.body;
   if (!adSoyad || !eposta || !mesaj) return res.status(400).json({ success: false, message: 'Lütfen zorunlu alanları doldurun.' });
-  const sub = { id: Date.now(), tarih: new Date().toISOString(), adSoyad, eposta, telefon:telefon||'', basvuruTipi:basvuruTipi||'Genel', mesaj, durum:'Okunmadı' };
+  if (req.body.kvkkOkundu !== true || req.body.kvkkVersiyon !== KVKK_VERSION) {
+    return res.status(400).json({ success: false, message: 'Lütfen güncel Aydınlatma Metni’ni okuyup ilgili kutucuğu işaretleyin. Sayfa uzun süredir açıksa yenileyin.' });
+  }
+  const sub = { id: Date.now(), tarih: new Date().toISOString(), adSoyad, eposta, telefon:telefon||'', basvuruTipi:basvuruTipi||'Genel', mesaj, durum:'Okunmadı', aydinlatma: { okundu: true, versiyon: KVKK_VERSION, tarih: new Date().toISOString() } };
   let subs = []; try { if(fs.existsSync(ILETISIM_DB)) subs = JSON.parse(fs.readFileSync(ILETISIM_DB,'utf-8')); } catch(e){}
   subs.push(sub); fs.writeFileSync(ILETISIM_DB, JSON.stringify(subs,null,2),'utf-8');
 

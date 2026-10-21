@@ -111,7 +111,7 @@
       <div class="contact-grid">
         <div class="contact-form-col">
           <h2>İletişim Formu</h2>
-          <form class="contact-form iletisim-form">
+          <form class="contact-form iletisim-form" data-kvkk-versiyon="2026-10-22">
             <div class="form-row">
               <div class="form-group">
                 <label>Ad Soyad *</label>
@@ -141,6 +141,13 @@
             <div class="form-group">
               <label>Mesajınız *</label>
               <textarea name="mesaj" rows="4" placeholder="Fikri mülkiyet ihtiyaçlarınızı açıklayın..." required></textarea>
+            </div>
+            <div class="kvkk-notice">
+              <div class="kvkk-row">
+                <input type="checkbox" id="iletisim-kvkk" name="kvkkOkundu" required aria-describedby="iletisim-kvkk-bilgi"/>
+                <label for="iletisim-kvkk"><a href="/kvkk-aydinlatma-metni" target="_blank" rel="noopener noreferrer">Aydınlatma Metni’ni</a> okudum ve anladım.</label>
+              </div>
+              <p id="iletisim-kvkk-bilgi">Formda paylaştığınız bilgiler talebinizin değerlendirilmesi ve sizinle iletişim kurulması için kullanılır.</p>
             </div>
             <div class="form-actions">
               <button type="submit">

@@ -366,7 +366,7 @@
             </ul>
           </div>
           <div class="form-panel">
-            <form class="form-grid marka-arastirma-form">
+            <form class="form-grid marka-arastirma-form" data-kvkk-versiyon="2026-10-22">
               <div class="form-group">
                 <label class="form-label">Tescil Edilecek Marka Adı *</label>
                 <input type="text" name="markaAdi" class="form-input" placeholder="Örn: Doğu Patent" required/>
@@ -395,9 +395,15 @@
                 <label class="form-label">Ek Not</label>
                 <textarea name="ekNot" class="form-input form-textarea" rows="3" placeholder="Markanız hakkında eklemek istediğiniz detaylar..."></textarea>
               </div>
+              <div class="kvkk-notice">
+                <div class="kvkk-row">
+                  <input type="checkbox" id="marka-kvkk" name="kvkkOkundu" required aria-describedby="marka-kvkk-bilgi"/>
+                  <label for="marka-kvkk"><a href="/kvkk-aydinlatma-metni" target="_blank" rel="noopener noreferrer">Aydınlatma Metni’ni</a> okudum ve anladım.</label>
+                </div>
+                <p id="marka-kvkk-bilgi">Formda paylaştığınız bilgiler talebinizin değerlendirilmesi ve sizinle iletişim kurulması için kullanılır.</p>
+              </div>
               <div class="form-submit-wrap">
                 <button type="submit" class="form-submit">ÜCRETSİZ ARAŞTIRMA BAŞLAT</button>
-                <p class="form-kvkk">Kişisel verileriniz 6698 sayılı KVKK kapsamında korunmaktadır.</p>
               </div>
             </form>
           </div>
