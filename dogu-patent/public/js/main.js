@@ -35,6 +35,44 @@ function showToast(message, isError = false) {
   }, 4000);
 }
 
+// ===== Talep kaynağı (ilk ve son temas) =====
+// Reklam/gönderi bağlantısındaki UTM, gclid, fbclid bilgisi formla birlikte gönderilir.
+// Kişisel veri saklanmaz; tarayıcı depolaması kapalıysa form yine çalışır.
+const DP_KAYNAK_ALANLARI = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid', 'fbclid'];
+function dpKaynakOku(anahtar) {
+  try { return JSON.parse(localStorage.getItem(anahtar) || 'null'); } catch (e) { return null; }
+}
+function dpKaynakYaz(anahtar, deger) {
+  try { localStorage.setItem(anahtar, JSON.stringify(deger)); } catch (e) {}
+}
+function dpKaynakYakala() {
+  const params = new URLSearchParams(window.location.search);
+  const temas = {};
+  DP_KAYNAK_ALANLARI.forEach(k => { const v = params.get(k); if (v) temas[k] = v.slice(0, 200); });
+  let yonlendiren = '';
+  try {
+    if (document.referrer) {
+      const r = new URL(document.referrer);
+      if (r.hostname !== window.location.hostname) yonlendiren = r.hostname;
+    }
+  } catch (e) {}
+  const yeniTemas = Object.keys(temas).length > 0 || !!yonlendiren;
+  if (!yeniTemas && dpKaynakOku('dp_kaynak_ilk')) return;
+  if (yonlendiren) temas.yonlendiren = yonlendiren;
+  temas.giris_sayfasi = window.location.pathname.slice(0, 200);
+  temas.zaman = new Date().toISOString();
+  if (!dpKaynakOku('dp_kaynak_ilk')) dpKaynakYaz('dp_kaynak_ilk', temas);
+  if (yeniTemas) dpKaynakYaz('dp_kaynak_son', temas);
+}
+function dpKaynak() {
+  return { ilk: dpKaynakOku('dp_kaynak_ilk'), son: dpKaynakOku('dp_kaynak_son') };
+}
+function dpDonusum(formTuru) {
+  // Analytics önerilen olayı; kişisel veri gönderilmez.
+  try { if (typeof gtag === 'function') gtag('event', 'generate_lead', { form_turu: formTuru }); } catch (e) {}
+}
+dpKaynakYakala();
+
 // Marka Ön Araştırma Form
 function initMarkaForm() {
   const forms = document.querySelectorAll('.marka-arastirma-form');
@@ -58,7 +96,8 @@ function initMarkaForm() {
         il: form.querySelector('[name="il"]')?.value || '',
         ekNot: form.querySelector('[name="ekNot"]')?.value || '',
         kvkkOkundu: form.querySelector('[name="kvkkOkundu"]')?.checked === true,
-        kvkkVersiyon: form.dataset.kvkkVersiyon
+        kvkkVersiyon: form.dataset.kvkkVersiyon,
+        kaynak: dpKaynak()
       };
       
       try {
@@ -72,6 +111,7 @@ function initMarkaForm() {
         
         if (data.success) {
           showToast(data.message);
+          dpDonusum('on_arastirma');
           form.reset();
         } else {
           showToast(data.message, true);
@@ -107,7 +147,8 @@ function initContactForm() {
         basvuruTipi: form.querySelector('[name="basvuruTipi"]')?.value || 'Genel',
         mesaj: form.querySelector('[name="mesaj"]').value,
         kvkkOkundu: form.querySelector('[name="kvkkOkundu"]')?.checked === true,
-        kvkkVersiyon: form.dataset.kvkkVersiyon
+        kvkkVersiyon: form.dataset.kvkkVersiyon,
+        kaynak: dpKaynak()
       };
       
       try {
@@ -121,6 +162,7 @@ function initContactForm() {
         
         if (data.success) {
           showToast(data.message);
+          dpDonusum('iletisim');
           form.reset();
         } else {
           showToast(data.message, true);

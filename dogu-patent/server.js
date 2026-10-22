@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 3000;
 const ADMIN_USER = process.env.ADMIN_USER || '';
 const ADMIN_PASS = process.env.ADMIN_PASS || '';
 
-const KVKK_VERSION = '2026-10-22';
+const KVKK_VERSION = '2026-10-23';
 
 // Active session tokens (in-memory, cleared on server restart)
 const activeSessions = new Map();
@@ -39,6 +39,34 @@ function adminAuth(req, res, next) {
   const token = req.headers['x-admin-token'];
   if (isValidSession(token)) return next();
   res.status(401).json({ success: false, message: 'Oturum geçersiz. Lütfen giriş yapın.' });
+}
+
+// ===== Talep kaynağı (UTM / reklam tıklama kimliği) =====
+// Yalnız beklenen alanlar, kısa ve güvenli karakterlerle saklanır; kişisel veri içermez.
+const KAYNAK_ALANLARI = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid', 'fbclid', 'giris_sayfasi', 'yonlendiren', 'zaman'];
+function temizKaynakDegeri(v) {
+  return String(v == null ? '' : v).replace(/[^\p{L}\p{N} ._\-\/:+@%=]/gu, '').trim().slice(0, 200);
+}
+function temizKaynakTemasi(t) {
+  if (!t || typeof t !== 'object' || Array.isArray(t)) return null;
+  const out = {};
+  for (const k of KAYNAK_ALANLARI) {
+    const v = temizKaynakDegeri(t[k]);
+    if (v) out[k] = v;
+  }
+  return Object.keys(out).length ? out : null;
+}
+function temizKaynak(k) {
+  if (!k || typeof k !== 'object' || Array.isArray(k)) return null;
+  const ilk = temizKaynakTemasi(k.ilk), son = temizKaynakTemasi(k.son);
+  return ilk || son ? { ilk, son } : null;
+}
+function kaynakOzeti(k) {
+  const t = k && (k.son || k.ilk);
+  if (!t) return 'bilinmiyor (doğrudan giriş veya kaynak bilgisi yok)';
+  const parca = [t.utm_source, t.utm_medium, t.utm_campaign].filter(Boolean).join(' / ');
+  const tik = t.gclid ? 'Google reklam tıklaması' : (t.fbclid ? 'Meta tıklaması' : '');
+  return [parca, tik, t.yonlendiren ? 'yönlendiren: ' + t.yonlendiren : ''].filter(Boolean).join(' · ') || 'bilinmiyor';
 }
 
 // ===== Mail Gönderme Fonksiyonu =====
@@ -289,6 +317,7 @@ app.post('/api/marka-arastirma', async (req, res) => {
     id: Date.now(), tarih: new Date().toISOString(),
     markaAdi, sektor: sektorDegeri, adSoyad, telefon, eposta,
     il: il || '', ekNot: ekNot || '', durum: 'Yeni',
+    kaynak: temizKaynak(req.body.kaynak),
     aydinlatma: { okundu: true, versiyon: KVKK_VERSION, tarih: new Date().toISOString() }
   };
 
@@ -303,7 +332,7 @@ app.post('/api/marka-arastirma', async (req, res) => {
     const tarihStr = new Date(sub.tarih).toLocaleString('tr-TR');
     await mailGonder(
       `Yeni Marka Araştırma Başvurusu - ${markaAdi}`,
-      `Yeni başvuru alındı.\n\nReferans No: ${sub.id}\nTarih: ${tarihStr}\nMarka Adı: ${markaAdi}\nSektör: ${sektorDegeri}\nAd Soyad: ${adSoyad}\nTelefon: ${telefon}\nE-posta: ${eposta}\nİl: ${il || '-'}\nEk Not: ${ekNot || '-'}`,
+      `Yeni başvuru alındı.\n\nReferans No: ${sub.id}\nTarih: ${tarihStr}\nMarka Adı: ${markaAdi}\nSektör: ${sektorDegeri}\nAd Soyad: ${adSoyad}\nTelefon: ${telefon}\nE-posta: ${eposta}\nİl: ${il || '-'}\nEk Not: ${ekNot || '-'}\nKaynak: ${kaynakOzeti(sub.kaynak)}`,
       `<h2 style="color:#1a237e;">Yeni Marka Araştırma Başvurusu</h2>
        <table style="border-collapse:collapse;width:100%;font-family:Arial,sans-serif;font-size:14px;">
          <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;width:160px;">Referans No</td><td style="padding:8px;border:1px solid #ddd;">${sub.id}</td></tr>
@@ -315,6 +344,7 @@ app.post('/api/marka-arastirma', async (req, res) => {
          <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">E-posta</td><td style="padding:8px;border:1px solid #ddd;">${eposta}</td></tr>
          <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">İl</td><td style="padding:8px;border:1px solid #ddd;">${il || '-'}</td></tr>
          <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">Ek Not</td><td style="padding:8px;border:1px solid #ddd;">${ekNot || '-'}</td></tr>
+         <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">Kaynak</td><td style="padding:8px;border:1px solid #ddd;">${kaynakOzeti(sub.kaynak)}</td></tr>
        </table>`
     );
   } catch (mailHata) {
@@ -336,7 +366,7 @@ app.post('/api/iletisim', async (req, res) => {
   if (req.body.kvkkOkundu !== true || req.body.kvkkVersiyon !== KVKK_VERSION) {
     return res.status(400).json({ success: false, message: 'Lütfen güncel Aydınlatma Metni’ni okuyup ilgili kutucuğu işaretleyin. Sayfa uzun süredir açıksa yenileyin.' });
   }
-  const sub = { id: Date.now(), tarih: new Date().toISOString(), adSoyad, eposta, telefon:telefon||'', basvuruTipi:basvuruTipi||'Genel', mesaj, durum:'Okunmadı', aydinlatma: { okundu: true, versiyon: KVKK_VERSION, tarih: new Date().toISOString() } };
+  const sub = { id: Date.now(), tarih: new Date().toISOString(), adSoyad, eposta, telefon:telefon||'', basvuruTipi:basvuruTipi||'Genel', mesaj, durum:'Okunmadı', kaynak: temizKaynak(req.body.kaynak), aydinlatma: { okundu: true, versiyon: KVKK_VERSION, tarih: new Date().toISOString() } };
   let subs = []; try { if(fs.existsSync(ILETISIM_DB)) subs = JSON.parse(fs.readFileSync(ILETISIM_DB,'utf-8')); } catch(e){}
   subs.push(sub); fs.writeFileSync(ILETISIM_DB, JSON.stringify(subs,null,2),'utf-8');
 
@@ -345,7 +375,7 @@ app.post('/api/iletisim', async (req, res) => {
     const tarihStr = new Date(sub.tarih).toLocaleString('tr-TR');
     await mailGonder(
       `Yeni İletişim Mesajı - ${basvuruTipi || 'Genel'}`,
-      `Yeni iletişim mesajı alındı.\n\nReferans No: ${sub.id}\nTarih: ${tarihStr}\nAd Soyad: ${adSoyad}\nE-posta: ${eposta}\nTelefon: ${telefon || '-'}\nBaşvuru Tipi: ${basvuruTipi || 'Genel'}\nMesaj: ${mesaj}`,
+      `Yeni iletişim mesajı alındı.\n\nReferans No: ${sub.id}\nTarih: ${tarihStr}\nAd Soyad: ${adSoyad}\nE-posta: ${eposta}\nTelefon: ${telefon || '-'}\nBaşvuru Tipi: ${basvuruTipi || 'Genel'}\nMesaj: ${mesaj}\nKaynak: ${kaynakOzeti(sub.kaynak)}`,
       `<h2 style="color:#1a237e;">Yeni İletişim Mesajı</h2>
        <table style="border-collapse:collapse;width:100%;font-family:Arial,sans-serif;font-size:14px;">
          <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;width:160px;">Referans No</td><td style="padding:8px;border:1px solid #ddd;">${sub.id}</td></tr>
@@ -355,6 +385,7 @@ app.post('/api/iletisim', async (req, res) => {
          <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">Telefon</td><td style="padding:8px;border:1px solid #ddd;">${telefon || '-'}</td></tr>
          <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">Başvuru Tipi</td><td style="padding:8px;border:1px solid #ddd;">${basvuruTipi || 'Genel'}</td></tr>
          <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">Mesaj</td><td style="padding:8px;border:1px solid #ddd;">${mesaj}</td></tr>
+         <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">Kaynak</td><td style="padding:8px;border:1px solid #ddd;">${kaynakOzeti(sub.kaynak)}</td></tr>
        </table>`
     );
   } catch (mailHata) {

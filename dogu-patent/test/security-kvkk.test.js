@@ -8,7 +8,7 @@ const net = require('node:net');
 const { setTimeout: delay } = require('node:timers/promises');
 
 const root = path.join(__dirname, '..');
-const version = '2026-10-22';
+const version = '2026-10-23';
 
 async function startServer(credentials = {}) {
   const dataDir = await mkdtemp(path.join(tmpdir(), 'dogu-patent-test-'));
@@ -244,5 +244,36 @@ test('Güncel posta paketi: iki form bildirimi yalnız yerel SMTP üzerinden iki
   } finally {
     if (server) await server.stop();
     await smtp.stop();
+  }
+});
+
+test('Talep kaynağı: UTM/gclid kaydedilir; beklenmeyen alan ve tehlikeli karakter atılır', async () => {
+  const server = await startServer();
+  try {
+    const kaynak = {
+      ilk: { utm_source: 'instagram', utm_medium: 'social', utm_campaign: 'hafta-44<script>', giris_sayfasi: '/', zaman: '2026-10-23T09:00:00.000Z', eposta: 'sizinti@example.invalid' },
+      son: { utm_source: 'google', utm_medium: 'cpc', gclid: 'Cj0KCQ-test_123', yonlendiren: 'www.google.com' },
+      fazla: { x: 1 }
+    };
+    for (const [route, fields, file] of [
+      ['/api/marka-arastirma', { markaAdi: 'kaynak-test', adSoyad: 'Local Test', telefon: '05000000000', eposta: 'test@example.invalid' }, 'marka-arastirma.json'],
+      ['/api/iletisim', { adSoyad: 'Local Test', eposta: 'test@example.invalid', mesaj: 'kaynak-test' }, 'iletisim.json']
+    ]) {
+      const result = await post(server, route, { ...fields, kvkkOkundu: true, kvkkVersiyon: version, kaynak });
+      assert.equal(result.status, 200);
+      const rows = JSON.parse(await readFile(path.join(server.dataDir, file), 'utf-8'));
+      const k = rows.at(-1).kaynak;
+      assert.equal(k.son.utm_source, 'google');
+      assert.equal(k.son.gclid, 'Cj0KCQ-test_123');
+      assert.equal(k.ilk.utm_campaign, 'hafta-44script');
+      assert.equal(k.ilk.eposta, undefined);
+      assert.equal(k.fazla, undefined);
+    }
+    const none = await post(server, '/api/iletisim', { adSoyad: 'Local Test', eposta: 'test@example.invalid', mesaj: 'kaynaksiz', kvkkOkundu: true, kvkkVersiyon: version });
+    assert.equal(none.status, 200);
+    const rows = JSON.parse(await readFile(path.join(server.dataDir, 'iletisim.json'), 'utf-8'));
+    assert.equal(rows.at(-1).kaynak, null);
+  } finally {
+    await server.stop();
   }
 });
