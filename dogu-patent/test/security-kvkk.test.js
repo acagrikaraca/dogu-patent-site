@@ -133,3 +133,116 @@ test('Her iki formda boş başlayan zorunlu kutucuk ve çalışan metin bağlant
     assert.match(await res.text(), /ÖZ GÜVEN DANIŞMANLIK EĞİTİM SANAYİ TİCARET LİMİTED ŞİRKETİ/);
   } finally { await server.stop(); }
 });
+
+test('Güncel yükleme paketi: oturumsuz yükleme reddedilir, yetkili görsel okunabilir', async () => {
+  const server = await startServer({ ADMIN_USER: 'test-user', ADMIN_PASS: 'test-password' });
+  const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+j0uoAAAAASUVORK5CYII=', 'base64');
+  function form() {
+    const data = new FormData();
+    data.set('baslik', 'Yerel yükleme provası');
+    data.set('icerik', '<p>Yalnız yerel bağımlılık uyumluluk testi.</p>');
+    data.set('gorsel', new Blob([png], { type: 'image/png' }), 'test.png');
+    return data;
+  }
+  try {
+    const blocked = await fetch(server.url + '/api/admin/blog', { method: 'POST', body: form() });
+    assert.equal(blocked.status, 401);
+    assert.deepEqual(await readdir(path.join(server.dataDir, 'uploads', 'blog')), []);
+    const login = await post(server, '/api/admin/login', { kullanici: 'test-user', sifre: 'test-password' });
+    const created = await fetch(server.url + '/api/admin/blog', {
+      method: 'POST', headers: { 'x-admin-token': login.body.token }, body: form()
+    });
+    assert.equal(created.status, 200);
+    const result = await created.json();
+    assert.equal(result.success, true);
+    assert.match(result.post.gorsel, /^\/uploads\/blog\/[^/]+\.png$/);
+    const image = await fetch(server.url + result.post.gorsel);
+    assert.equal(image.status, 200);
+    assert.deepEqual(Buffer.from(await image.arrayBuffer()), png);
+    const posts = await (await fetch(server.url + '/api/blog')).json();
+    assert.equal(posts.length, 1);
+    assert.equal(posts[0].gorsel, result.post.gorsel);
+  } finally { await server.stop(); }
+});
+
+async function startSmtpSink() {
+  const messages = [];
+  const sockets = new Set();
+  const smtp = net.createServer(socket => {
+    sockets.add(socket);
+    socket.on('close', () => sockets.delete(socket));
+    socket.setEncoding('utf8');
+    socket.write('220 localhost local-test-smtp\r\n');
+    let pending = '', inData = false, recipients = [], lines = [];
+    socket.on('data', chunk => {
+      pending += chunk;
+      let end;
+      while ((end = pending.indexOf('\r\n')) !== -1) {
+        const line = pending.slice(0, end);
+        pending = pending.slice(end + 2);
+        if (inData) {
+          if (line === '.') {
+            messages.push({ recipients: [...recipients], raw: lines.join('\r\n') });
+            inData = false;
+            socket.write('250 accepted-for-local-test\r\n');
+          } else lines.push(line.replace(/^\.\./, '.'));
+        } else if (/^EHLO /i.test(line)) {
+          socket.write('250-localhost\r\n250 AUTH PLAIN\r\n');
+        } else if (/^AUTH PLAIN /i.test(line)) {
+          socket.write('235 local-test-authenticated\r\n');
+        } else if (/^MAIL FROM:/i.test(line)) {
+          recipients = []; lines = [];
+          socket.write('250 ok\r\n');
+        } else if (/^RCPT TO:/i.test(line)) {
+          recipients.push(line.match(/<([^>]+)>/)[1]);
+          socket.write('250 ok\r\n');
+        } else if (line === 'DATA') {
+          inData = true;
+          socket.write('354 end-with-dot\r\n');
+        } else if (line === 'QUIT') {
+          socket.end('221 bye\r\n');
+        } else {
+          socket.write('250 ok\r\n');
+        }
+      }
+    });
+  });
+  await new Promise(resolve => smtp.listen(0, '127.0.0.1', resolve));
+  return {
+    port: smtp.address().port, messages,
+    async stop() {
+      for (const socket of sockets) socket.destroy();
+      await new Promise(resolve => smtp.close(resolve));
+    }
+  };
+}
+
+test('Güncel posta paketi: iki form bildirimi yalnız yerel SMTP üzerinden iki alıcıya ulaşır', { timeout: 20000 }, async () => {
+  const smtp = await startSmtpSink();
+  let server;
+  try {
+    server = await startServer({
+      SMTP_USER: 'sender@example.invalid', SMTP_PASS: 'local-test-password',
+      SMTP_HOST: '127.0.0.1', SMTP_PORT: String(smtp.port), SMTP_SECURE: 'false',
+      MAIL_FROM: 'sender@example.invalid', NOTIFY_EMAILS: 'first@example.invalid,second@example.invalid'
+    });
+    for (const [route, fields] of [
+      ['/api/iletisim', { adSoyad: 'Local Test', eposta: 'test@example.invalid', mesaj: 'local-smtp-probe' }],
+      ['/api/marka-arastirma', { markaAdi: 'local-smtp-probe', adSoyad: 'Local Test', telefon: '05000000000', eposta: 'test@example.invalid' }]
+    ]) {
+      const result = await post(server, route, { ...fields, kvkkOkundu: true, kvkkVersiyon: version });
+      assert.equal(result.status, 200);
+      assert.equal(result.body.success, true);
+    }
+    assert.equal(smtp.messages.length, 2);
+    for (const message of smtp.messages) {
+      assert.deepEqual(message.recipients, ['first@example.invalid', 'second@example.invalid']);
+      assert.match(message.raw, /^From: sender@example\.invalid\r?$/m);
+      assert.match(message.raw, /^Subject: /m);
+      assert.match(message.raw, /local-smtp-probe/);
+    }
+  } finally {
+    if (server) await server.stop();
+    await smtp.stop();
+  }
+});
