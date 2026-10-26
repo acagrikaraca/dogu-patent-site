@@ -267,6 +267,18 @@ app.post('/api/admin/blog', adminAuth, upload.single('gorsel'), (req, res) => {
   res.json({ success: true, message: 'Blog yazısı oluşturuldu.', post });
 });
 
+// Yazı içi görsel: yönetici yükler, yazı içeriğinde <img src> ile kullanılır. Yalnız görsel dosyası kabul edilir.
+const GORSEL_TURLERI = new Set(['image/jpeg', 'image/png', 'image/webp']);
+app.post('/api/admin/gorsel', adminAuth, upload.single('gorsel'), (req, res) => {
+  if (!req.file) return res.status(400).json({ success: false, message: 'Görsel dosyası gerekli.' });
+  const ext = path.extname(req.file.originalname || '').toLowerCase();
+  if (!GORSEL_TURLERI.has(req.file.mimetype) || !['.jpg', '.jpeg', '.png', '.webp'].includes(ext)) {
+    fs.unlink(req.file.path, () => {});
+    return res.status(400).json({ success: false, message: 'Yalnız JPEG, PNG veya WebP görsel yüklenebilir.' });
+  }
+  res.json({ success: true, url: uploadPublicPath(req.file.filename) });
+});
+
 app.put('/api/admin/blog/:id', adminAuth, upload.single('gorsel'), (req, res) => {
   const posts = getBlogPosts();
   const idx = posts.findIndex(p => p.id === req.params.id);

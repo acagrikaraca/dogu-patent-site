@@ -277,3 +277,23 @@ test('Talep kaynağı: UTM/gclid kaydedilir; beklenmeyen alan ve tehlikeli karak
     await server.stop();
   }
 });
+
+test('Yazı içi görsel: oturumsuz yükleme reddedilir, görsel dışı dosya silinir, yetkili görsel adresi döner', async () => {
+  const server = await startServer({ ADMIN_USER: 'test-user', ADMIN_PASS: 'test-password' });
+  const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+j0uoAAAAASUVORK5CYII=', 'base64');
+  const form = (blob, name) => { const d = new FormData(); d.set('gorsel', blob, name); return d; };
+  try {
+    const blocked = await fetch(server.url + '/api/admin/gorsel', { method: 'POST', body: form(new Blob([png], { type: 'image/png' }), 'a.png') });
+    assert.equal(blocked.status, 401);
+    const login = await post(server, '/api/admin/login', { kullanici: 'test-user', sifre: 'test-password' });
+    const headers = { 'x-admin-token': login.body.token };
+    const bad = await fetch(server.url + '/api/admin/gorsel', { method: 'POST', headers, body: form(new Blob(['<script>'], { type: 'text/html' }), 'x.html') });
+    assert.equal(bad.status, 400);
+    assert.deepEqual(await readdir(path.join(server.dataDir, 'uploads', 'blog')), []);
+    const ok = await fetch(server.url + '/api/admin/gorsel', { method: 'POST', headers, body: form(new Blob([png], { type: 'image/png' }), 'G-1.png') });
+    assert.equal(ok.status, 200);
+    const result = await ok.json();
+    assert.match(result.url, /^\/uploads\/blog\/[^/]+\.png$/);
+    assert.deepEqual(Buffer.from(await (await fetch(server.url + result.url)).arrayBuffer()), png);
+  } finally { await server.stop(); }
+});
