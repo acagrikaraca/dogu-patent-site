@@ -56,6 +56,57 @@ async function post(server, route, body, token) {
   return { status: res.status, body: await res.json() };
 }
 
+test('Blog: HTML içerik, SEO, kalıcı adres, görsel ve site haritası birlikte çalışır', async () => {
+  const server = await startServer({ ADMIN_USER:'test-user', ADMIN_PASS:'test-password' });
+  try {
+    const login = await post(server, '/api/admin/login', { kullanici:'test-user', sifre:'test-password' });
+    const token = login.body.token;
+    const form = new FormData();
+    for (const [key,value] of Object.entries({baslik:'Uygulama & hakları',slug:'uygulama-haklari',icerik:'<p>Arama motoruna doğrudan sunulan içerik.</p>',ozet:'Örnek özet.',seoTitle:'Uygulama Hakları | Doğu Patent',metaDescription:'<kontrol> & "açıklama"',gorselAlt:'Doğu Patent uygulama hakları kapağı'})) form.set(key,value);
+    form.set('gorsel',new Blob([Buffer.from('RIFFtestWEBP')],{type:'image/webp'}),'cover.webp');
+    const created = await fetch(server.url+'/api/admin/blog',{method:'POST',headers:{'x-admin-token':token},body:form});
+    assert.equal(created.status,200);
+    const {post:article} = await created.json();
+    const response = await fetch(server.url+'/blog/uygulama-haklari');
+    assert.equal(response.status,200);
+    const html = await response.text();
+    assert.match(html,/<title>Uygulama Hakları \| Doğu Patent<\/title>/);
+    assert.match(html,/<h1>Uygulama &amp; hakları<\/h1>/);
+    assert.match(html,/<p>Arama motoruna doğrudan sunulan içerik\.<\/p>/);
+    assert.match(html,/name="description" content="&lt;kontrol&gt; &amp; &quot;açıklama&quot;"/);
+    assert.match(html,/rel="canonical" href="https:\/\/dogupatent.com\/blog\/uygulama-haklari"/);
+    assert.match(html,/alt="Doğu Patent uygulama hakları kapağı"/);
+    assert.equal((html.match(/<h1>/g)||[]).length,1);
+    const schema = JSON.parse(html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
+    assert.equal(schema['@graph'][0].headline,article.baslik);
+    assert.equal(schema['@graph'][0].image[0],'https://dogupatent.com'+article.gorsel);
+    assert.equal(schema['@graph'][0].datePublished,article.tarih);
+    assert.equal(schema['@graph'][0].author,undefined);
+    const blog = await (await fetch(server.url+'/blog')).text();
+    assert.match(blog,/href="\/blog\/uygulama-haklari"/);
+    assert.match(blog,/loading="lazy"/);
+    assert(!blog.includes('Yazılar yükleniyor'));
+    const mapResponse = await fetch(server.url+'/sitemap.xml');
+    assert.match(mapResponse.headers.get('content-type'),/application\/xml/);
+    const map = await mapResponse.text();
+    assert.match(map,/<loc>https:\/\/dogupatent.com\/blog\/uygulama-haklari<\/loc>/);
+    assert(map.includes(article.gorsel));
+    assert(!map.includes('/admin'));
+    assert.match(await (await fetch(server.url+'/robots.txt')).text(),/Sitemap: https:\/\/dogupatent.com\/sitemap.xml/);
+    const duplicate = await post(server,'/api/admin/blog',{baslik:'Başka',slug:'uygulama-haklari',icerik:'Başka içerik'},token);
+    assert.equal(duplicate.status,400);
+    const invalid = await post(server,'/api/admin/blog',{baslik:'Başka',slug:'../admin',icerik:'Başka içerik'},token);
+    assert.equal(invalid.status,400);
+    const edited = await fetch(server.url+'/api/admin/blog/'+article.id,{method:'PUT',headers:{'Content-Type':'application/json','x-admin-token':token},body:JSON.stringify({baslik:'Yeni başlık'})});
+    assert.equal((await edited.json()).post.slug,'uygulama-haklari');
+    assert.equal((await fetch(server.url+'/blog/olmayan-yazi')).status,404);
+    await fetch(server.url+'/api/admin/blog/'+article.id,{method:'PUT',headers:{'Content-Type':'application/json','x-admin-token':token},body:JSON.stringify({yayinda:false})});
+    assert.equal((await fetch(server.url+'/blog/uygulama-haklari')).status,404);
+    assert(!(await (await fetch(server.url+'/sitemap.xml')).text()).includes('uygulama-haklari'));
+    assert(!(await (await fetch(server.url+'/blog')).text()).includes('uygulama-haklari'));
+  } finally { await server.stop(); }
+});
+
 test('Yönetici ayarı eksikse giriş kapalı kalır, site çalışır', async t => {
   for (const credentials of [{}, { ADMIN_USER: 'test-user' }, { ADMIN_PASS: 'test-password' }]) {
     const server = await startServer(credentials);

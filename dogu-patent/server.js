@@ -6,6 +6,7 @@ const fs = require('fs');
 const crypto = require('crypto');
 const multer = require('multer');
 const nodemailer = require('nodemailer');
+const blogSeo = require('./blog-seo');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -206,11 +207,17 @@ function generateSlug(title) {
 app.get('/', (req, res) => res.sendFile(path.join(VIEWS_ROOT, 'index.html')));
 app.get('/hizmetlerimiz', (req, res) => res.sendFile(path.join(VIEWS_ROOT, 'hizmetlerimiz.html')));
 app.get('/hakkimizda', (req, res) => res.sendFile(path.join(VIEWS_ROOT, 'hakkimizda.html')));
-app.get('/blog', (req, res) => res.sendFile(path.join(VIEWS_ROOT, 'blog.html')));
+app.get('/blog', (req, res) => res.type('html').send(blogSeo.renderBlog(fs.readFileSync(path.join(VIEWS_ROOT, 'blog.html'), 'utf8'), getBlogPosts())));
 app.get('/iletisim', (req, res) => res.sendFile(path.join(VIEWS_ROOT, 'iletisim.html')));
 app.get('/kvkk-aydinlatma-metni', (req, res) => res.sendFile(path.join(VIEWS_ROOT, 'kvkk.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(VIEWS_ROOT, 'admin.html')));
-app.get('/blog/:slug', (req, res) => res.sendFile(path.join(VIEWS_ROOT, 'blog-detay.html')));
+app.get('/blog/:slug', (req, res) => {
+  const template = fs.readFileSync(path.join(VIEWS_ROOT, 'blog-detay.html'), 'utf8');
+  const post = getBlogPosts().find(p => p.yayinda && p.slug === req.params.slug);
+  res.status(post ? 200 : 404).type('html').send(post ? blogSeo.renderPost(template, post) : blogSeo.renderNotFound(template));
+});
+app.get('/sitemap.xml', (req, res) => res.type('application/xml').send(blogSeo.sitemap(getBlogPosts())));
+app.get('/robots.txt', (req, res) => res.type('text/plain').send('User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/admin/\nSitemap: '+blogSeo.ORIGIN+'/sitemap.xml\n'));
 
 // ===== Admin Login =====
 app.post('/api/admin/login', (req, res) => {
@@ -251,11 +258,17 @@ app.get('/api/admin/blog', adminAuth, (req, res) => {
 });
 
 app.post('/api/admin/blog', adminAuth, upload.single('gorsel'), (req, res) => {
-  const { baslik, kategori, ozet, icerik, okumaSuresi, oneCikan } = req.body;
+  const { baslik, kategori, ozet, icerik, okumaSuresi, oneCikan, slug, seoTitle, metaDescription, gorselAlt } = req.body;
   if (!baslik || !icerik) return res.status(400).json({ success: false, message: 'Başlık ve içerik zorunludur.' });
   const posts = getBlogPosts();
+  const newSlug = slug || generateSlug(baslik);
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(newSlug) || newSlug.length > 180 || posts.some(p => p.slug === newSlug)) {
+    if (req.file) fs.unlink(req.file.path, () => {});
+    return res.status(400).json({ success:false, message:'Yazı adresi geçersiz veya kullanımda.' });
+  }
   const post = {
-    id: Date.now().toString(), baslik, slug: generateSlug(baslik),
+    id: Date.now().toString(), baslik, slug: newSlug,
+    seoTitle: String(seoTitle || '').slice(0,180), metaDescription: String(metaDescription || '').slice(0,320), gorselAlt: String(gorselAlt || '').slice(0,300),
     kategori: kategori || 'Genel', ozet: ozet || '', icerik,
     gorsel: req.file ? uploadPublicPath(req.file.filename) : '',
     okumaSuresi: okumaSuresi || '5', oneCikan: oneCikan === 'true' || oneCikan === true,
@@ -284,7 +297,11 @@ app.put('/api/admin/blog/:id', adminAuth, upload.single('gorsel'), (req, res) =>
   const idx = posts.findIndex(p => p.id === req.params.id);
   if (idx === -1) return res.status(404).json({ success: false, message: 'Yazı bulunamadı.' });
   const { baslik, kategori, ozet, icerik, okumaSuresi, oneCikan, yayinda } = req.body;
-  if (baslik) { posts[idx].baslik = baslik; posts[idx].slug = generateSlug(baslik); }
+  // Published addresses stay stable when an editor changes a title.
+  if (baslik) posts[idx].baslik = baslik;
+  for (const [key, limit] of [['seoTitle',180],['metaDescription',320],['gorselAlt',300]]) {
+    if (req.body[key] !== undefined) posts[idx][key] = String(req.body[key]).slice(0,limit);
+  }
   if (kategori !== undefined) posts[idx].kategori = kategori;
   if (ozet !== undefined) posts[idx].ozet = ozet;
   if (icerik !== undefined) posts[idx].icerik = icerik;
