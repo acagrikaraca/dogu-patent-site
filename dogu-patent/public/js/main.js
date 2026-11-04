@@ -73,6 +73,89 @@ function dpDonusum(formTuru) {
 }
 dpKaynakYakala();
 
+// ===== Site sayacı =====
+// Hangi sayfanın kaç kez görüntülendiğini ve sayfanın ekranda ne kadar açık kaldığını ölçer.
+// Sayfada hiçbir şey göstermez; sonuçları yalnız yönetici paneli ve şirketin ajan sistemi okur.
+// Çerez, kalıcı kimlik veya kişisel veri yoktur: rastgele kimlik yalnız bu sayfa açılışının
+// süre güncellemelerini birleştirir ve tarayıcıda saklanmaz.
+(function dpSayac() {
+  try {
+    if (navigator.webdriver) return;
+    try { if (localStorage.getItem('dp_sayma') === '1') return; } catch (e) {}
+    var ADRES = '/api/olcum';
+    var id = '';
+    try {
+      var rastgele = new Uint8Array(8);
+      crypto.getRandomValues(rastgele);
+      id = Array.prototype.map.call(rastgele, function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+    } catch (e) {
+      id = (Date.now().toString(36) + Math.random().toString(36).slice(2)).replace(/[^a-z0-9]/g, '').slice(0, 20);
+    }
+    var yol = window.location.pathname.slice(0, 200);
+    var gorunur = null, birikmis = 0, derinlik = 0, sonGonderilen = '', basladi = false, bekleyen = false;
+    function simdi() { return (window.performance && performance.now) ? performance.now() : Date.now(); }
+    function sure() { return Math.round((birikmis + (gorunur === null ? 0 : simdi() - gorunur)) / 1000); }
+    function olcDerinlik() {
+      var kok = document.documentElement, govde = document.body;
+      var yukseklik = Math.max(kok.scrollHeight, govde ? govde.scrollHeight : 0);
+      var alt = (window.scrollY || window.pageYOffset || 0) + (window.innerHeight || kok.clientHeight || 0);
+      var yuzde = yukseklik > 0 ? Math.min(100, Math.round(alt / yukseklik * 100)) : 100;
+      if (yuzde > derinlik) derinlik = yuzde;
+    }
+    function gonder(veri) {
+      var metin = JSON.stringify(veri);
+      try { if (navigator.sendBeacon && navigator.sendBeacon(ADRES, metin)) return; } catch (e) {}
+      try {
+        fetch(ADRES, { method: 'POST', body: metin, keepalive: true, credentials: 'omit', headers: { 'Content-Type': 'text/plain' } }).catch(function () {});
+      } catch (e) {}
+    }
+    function ilkGorunum() {
+      if (basladi) return;
+      basladi = true;
+      var ic = false, gelen = '';
+      try {
+        if (document.referrer) {
+          var r = new URL(document.referrer);
+          if (r.hostname === window.location.hostname) ic = true; else gelen = r.hostname;
+        }
+      } catch (e) {}
+      var q = new URLSearchParams(window.location.search), etiket = {};
+      ['utm_source', 'utm_medium', 'utm_campaign'].forEach(function (a) { var v = q.get(a); if (v) etiket[a.slice(4, 5)] = v.slice(0, 80); });
+      if (q.get('gclid')) etiket.gclid = 1;
+      if (q.get('fbclid')) etiket.fbclid = 1;
+      var en = window.innerWidth || 0;
+      var dokunmatik = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+      var cihaz = en < 768 ? 'mobil' : (dokunmatik && en < 1200 ? 'tablet' : 'masaustu');
+      olcDerinlik();
+      gonder({ v: 1, t: 'g', i: id, p: yol, r: gelen, ic: ic ? 1 : 0, k: etiket, c: cihaz });
+    }
+    function guncelle() {
+      if (!basladi) return;
+      olcDerinlik();
+      var s = sure(), anahtar = s + ':' + derinlik;
+      if (anahtar === sonGonderilen) return;
+      sonGonderilen = anahtar;
+      gonder({ v: 1, t: 's', i: id, p: yol, s: s, d: derinlik });
+    }
+    function durdur() { if (gorunur !== null) { birikmis += simdi() - gorunur; gorunur = null; } }
+    // Arka planda açılıp hiç görülmeyen sekme sayılmaz; görüntülenme sayfa ilk kez ekrana gelince başlar.
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible') { if (gorunur === null) gorunur = simdi(); ilkGorunum(); }
+      else { durdur(); guncelle(); }
+    });
+    window.addEventListener('pagehide', function () { durdur(); guncelle(); });
+    window.addEventListener('pageshow', function (e) {
+      if (e.persisted && document.visibilityState === 'visible' && gorunur === null) gorunur = simdi();
+    });
+    window.addEventListener('scroll', function () {
+      if (bekleyen) return;
+      bekleyen = true;
+      (window.requestAnimationFrame || setTimeout)(function () { bekleyen = false; olcDerinlik(); });
+    }, { passive: true });
+    if (document.visibilityState === 'visible') { gorunur = simdi(); ilkGorunum(); }
+  } catch (e) {}
+})();
+
 // Marka Ön Araştırma Form
 function initMarkaForm() {
   const forms = document.querySelectorAll('.marka-arastirma-form');

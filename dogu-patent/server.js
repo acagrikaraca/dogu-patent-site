@@ -7,6 +7,7 @@ const crypto = require('crypto');
 const multer = require('multer');
 const nodemailer = require('nodemailer');
 const blogSeo = require('./blog-seo');
+const sayacModulu = require('./sayac');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -186,6 +187,7 @@ app.use('/uploads', express.static(UPLOAD_ROOT));
 app.use(express.static(PUBLIC_ROOT));
 app.set('views', VIEWS_ROOT);
 
+const sayac = sayacModulu.olustur({ kok: path.join(STORAGE_ROOT, 'sayac'), yolCoz: sayacYolu });
 const BLOG_DB = dataFile('blog.json');
 const MARKA_ARASTIRMA_DB = dataFile('marka-arastirma.json');
 const ILETISIM_DB = dataFile('iletisim.json');
@@ -201,6 +203,27 @@ function generateSlug(title) {
   let s = title.toLowerCase();
   for (const [k,v] of Object.entries(tr)) s = s.replace(new RegExp(k,'g'), v);
   return s.replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+}
+
+// ===== Site sayacı (gizli; yalnız yönetici oturumu ve ajan sistemi okur) =====
+// Görüntülenme, sayfada kalma süresi, kaydırma derinliği ve geliş kaynağı. Kişisel veri tutulmaz (ayrıntı sayac.js).
+const SAYFA_ADLARI = { '/': 'Ana sayfa', '/hizmetlerimiz': 'Hizmetlerimiz', '/hakkimizda': 'Hakkımızda', '/blog': 'Blog',
+  '/iletisim': 'İletişim', '/kvkk-aydinlatma-metni': 'KVKK aydınlatma metni', '/404': 'Bulunamayan adres (404)' };
+let yayindakiSluglar = { at: 0, set: new Set() };
+function sayacYolu(ham) {
+  let yol = String(ham == null ? '' : ham).split(/[?#]/)[0].slice(0, 220);
+  if (!yol.startsWith('/')) return null;
+  try { yol = decodeURIComponent(yol); } catch (e) { return '/404'; }
+  if (yol.length > 1) yol = yol.replace(/\/+$/, '');
+  if (SAYFA_ADLARI[yol] && yol !== '/404') return yol;
+  const m = yol.match(/^\/blog\/([a-z0-9]+(?:-[a-z0-9]+)*)$/);
+  if (m) {
+    if (Date.now() - yayindakiSluglar.at > 30000) {
+      yayindakiSluglar = { at: Date.now(), set: new Set(getBlogPosts().filter(p => p.yayinda && p.slug).map(p => p.slug)) };
+    }
+    if (yayindakiSluglar.set.has(m[1])) return yol;
+  }
+  return '/404';   // denenen adres saklanmaz; yalnız bulunamayan sayfa sayısı tutulur
 }
 
 // ===== Pages =====
@@ -440,6 +463,27 @@ app.get('/api/admin/basvurular', adminAuth, (req, res) => {
 });
 app.get('/api/admin/mesajlar', adminAuth, (req, res) => {
   try { if(fs.existsSync(ILETISIM_DB)) return res.json(JSON.parse(fs.readFileSync(ILETISIM_DB,'utf-8'))); } catch(e){} res.json([]);
+});
+
+// ===== Site sayacı uçları =====
+// Ziyaretçi tarafı yalnız yazar ve her durumda boş 204 döner (sayı veya veri göstermez). Okuma yalnız yönetici oturumuyla.
+app.post('/api/olcum', express.text({ type: () => true, limit: '4kb' }), (req, res) => {
+  let govde = req.body;
+  if (typeof govde === 'string') { try { govde = JSON.parse(govde); } catch (e) { govde = null; } }
+  try {
+    sayac.olay(govde, { ua: req.headers['user-agent'], adres: req.headers['x-forwarded-for'] || req.socket.remoteAddress });
+  } catch (e) {
+    console.error('[SAYAC] olay işlenemedi:', e.message);
+  }
+  res.set('Cache-Control', 'no-store').status(204).end();
+});
+app.get('/api/admin/sayac', adminAuth, (req, res) => {
+  const yazilar = new Map(getBlogPosts().map(p => [p.slug, p.baslik]));   // yayından kalkan yazı da adıyla görünür
+  const baslik = yol => SAYFA_ADLARI[yol] || (yol.startsWith('/blog/') && yazilar.get(yol.slice(6))) || yol;
+  const veri = sayac.ozet({ gun: req.query.gun, ayrinti: req.query.ayrinti === '1', baslik });
+  // Ajan sistemindeki n8n, Türkçe UTF-8 yanıtı başka kodlama sanabiliyor; JSON yalnız ASCII kaçışla gönderilir (anlam aynı).
+  const metin = JSON.stringify(veri).replace(/[\u007f-￿]/g, c => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'));
+  res.set('Cache-Control', 'no-store').type('application/json').send(metin);
 });
 
 app.use((req, res) => { res.status(404).sendFile(path.join(VIEWS_ROOT, 'index.html')); });

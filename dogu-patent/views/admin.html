@@ -74,6 +74,28 @@
     .toast.show{transform:translateY(0)}.toast.success{background:var(--success)}.toast.error{background:var(--error)}
     .empty-state{text-align:center;padding:4rem 2rem;color:var(--secondary)}
     .empty-state .material-symbols-outlined{font-size:3rem;color:#ddd;margin-bottom:1rem}
+    /* Ziyaretler (site sayacı) */
+    .sy-donem{display:flex;gap:.25rem}.sy-donem button{padding:.4rem .8rem;border:1px solid #ddd;background:white;font-family:'Inter',sans-serif;font-size:.75rem;font-weight:600;color:var(--secondary);cursor:pointer}
+    .sy-donem button.on{background:var(--primary);color:white;border-color:var(--primary)}
+    .sy-not{font-size:.75rem;color:var(--secondary);margin-bottom:1.25rem;line-height:1.5}
+    .sy-kutular{display:grid;grid-template-columns:repeat(5,1fr);gap:.75rem;margin-bottom:1.5rem}
+    .sy-kutu{border:1px solid #eee;padding:.9rem 1rem;background:#fafbfc}.sy-kutu span{display:block;font-size:.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--secondary)}
+    .sy-kutu b{display:block;font-size:1.5rem;color:var(--primary);margin:.25rem 0 .15rem;font-variant-numeric:tabular-nums}.sy-kutu small{font-size:.6875rem;color:var(--secondary)}
+    .sy-baslik{font-size:.8125rem;font-weight:700;color:var(--primary);margin:1.5rem 0 .6rem}
+    .sy-gunler{display:flex;align-items:flex-end;gap:2px;height:120px;border-bottom:1px solid #ddd;padding-top:.5rem}
+    .sy-gunler div{flex:1;background:var(--primary-container);min-height:1px;opacity:.85}.sy-gunler div:hover{opacity:1;background:var(--primary)}
+    .sy-eksen{display:flex;justify-content:space-between;font-size:.625rem;color:var(--secondary);margin-top:.25rem}
+    .sy-tablo{width:100%;border-collapse:collapse;font-size:.8125rem}.sy-tablo th{text-align:left;font-size:.6875rem;text-transform:uppercase;letter-spacing:.05em;color:var(--secondary);padding:.5rem;border-bottom:2px solid #eee;white-space:nowrap}
+    .sy-tablo td{padding:.55rem .5rem;border-bottom:1px solid #f2f2f2;vertical-align:top}.sy-tablo td.n,.sy-tablo th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+    .sy-tablo td small{display:block;color:var(--secondary);font-size:.6875rem;word-break:break-all}
+    .sy-iki{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+    .sy-cubuk{display:grid;grid-template-columns:9rem 1fr 3.5rem;gap:.5rem;align-items:center;font-size:.8125rem;margin-bottom:.35rem}
+    .sy-cubuk i{display:block;height:.6rem;background:var(--primary-container)}.sy-cubuk em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums}
+    .sy-artis{color:var(--success)}.sy-azalis{color:var(--error)}
+    .sy-sayma{display:flex;gap:.5rem;align-items:center;font-size:.8125rem;margin-top:1.5rem;padding-top:1rem;border-top:1px solid #eee;cursor:pointer}
+    .sy-notlar{font-size:.6875rem;color:var(--secondary);margin-top:1rem;padding-left:1rem;line-height:1.6}
+    .sy-kaydir{overflow-x:auto}
+    @media(max-width:900px){.sy-kutular{grid-template-columns:repeat(2,1fr)}.sy-iki{grid-template-columns:1fr}}
     @media(max-width:768px){.form-grid{grid-template-columns:1fr}.form-group.full{grid-column:span 1}.post-item{flex-wrap:wrap}}
   </style>
 </head>
@@ -108,6 +130,7 @@
       <div class="tab" data-tab="yeni">Yeni Yazi Ekle</div>
       <div class="tab" data-tab="basvurular">Marka Basvurulari</div>
       <div class="tab" data-tab="mesajlar">Iletisim Mesajlari</div>
+      <div class="tab" data-tab="ziyaretler">Ziyaretler</div>
     </div>
     <div class="tab-content active" id="tab-blog">
       <div class="card"><div class="card-header"><h2>Blog Yazilari</h2><button class="btn btn-primary" onclick="switchTab('yeni')">+ Yeni Yazi</button></div><div id="blogList"><div class="empty-state"><span class="material-symbols-outlined">hourglass_top</span><p>Yukleniyor...</p></div></div></div>
@@ -131,6 +154,16 @@
       </div>
     </div>
     <div class="tab-content" id="tab-basvurular"><div class="card"><div class="card-header"><h2>Marka On Arastirma Basvurulari</h2></div><div id="basvuruList"></div></div></div>
+    <div class="tab-content" id="tab-ziyaretler">
+      <div class="card">
+        <div class="card-header"><h2>Site ziyaretleri</h2>
+          <div class="sy-donem" role="group" aria-label="Dönem"><button type="button" data-gun="7">7 gün</button><button type="button" data-gun="30" class="on">30 gün</button><button type="button" data-gun="90">90 gün</button></div>
+        </div>
+        <p class="sy-not">Bu sayılar yalnız bu panelde ve şirketin ajan sisteminde görünür; ziyaretçiler göremez. Çerez veya kişisel veri kullanılmaz. Süre, sayfanın ekranda açık kaldığı süredir.</p>
+        <div id="syIcerik"><div class="empty-state"><span class="material-symbols-outlined">hourglass_top</span><p>Yükleniyor...</p></div></div>
+        <label class="sy-sayma"><input type="checkbox" id="saymaKutusu"/> Bu tarayıcıdan yaptığım ziyaretleri sayma (kendi bilgisayarınızda ve telefonunuzda bir kez işaretleyin)</label>
+      </div>
+    </div>
     <div class="tab-content" id="tab-mesajlar"><div class="card"><div class="card-header"><h2>Iletisim Mesajlari</h2></div><div id="mesajList"></div></div></div>
   </div>
 </div>
@@ -185,7 +218,7 @@ document.getElementById('loginForm').addEventListener('submit',async(e)=>{
 
 // ===== TABS =====
 document.querySelectorAll('.tab').forEach(tab=>{tab.addEventListener('click',()=>switchTab(tab.dataset.tab))});
-function switchTab(name){document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));document.querySelectorAll('.tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab-'+name));if(name==='blog')loadBlogList();if(name==='basvurular')loadBasvurular();if(name==='mesajlar')loadMesajlar()}
+function switchTab(name){document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));document.querySelectorAll('.tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab-'+name));if(name==='blog')loadBlogList();if(name==='basvurular')loadBasvurular();if(name==='mesajlar')loadMesajlar();if(name==='ziyaretler')loadZiyaretler()}
 
 // ===== TOAST =====
 function showToast(msg,type='success'){let t=document.querySelector('.toast');if(!t){t=document.createElement('div');t.className='toast';document.body.appendChild(t)}t.textContent=msg;t.className='toast '+type;requestAnimationFrame(()=>t.classList.add('show'));setTimeout(()=>t.classList.remove('show'),3500)}
@@ -205,6 +238,47 @@ document.getElementById('gorsel').addEventListener('change',(e)=>{const f=e.targ
 // ===== BASVURULAR & MESAJLAR =====
 async function loadBasvurular(){const c=document.getElementById('basvuruList');try{const r=await authFetch('/api/admin/basvurular');const d=await r.json();if(!d.length){c.innerHTML='<div class="empty-state"><span class="material-symbols-outlined">inbox</span><p>Henuz basvuru yok.</p></div>';return}c.innerHTML=d.reverse().map(b=>'<div class="post-item"><div class="post-info"><h4>'+b.markaAdi+' - '+b.adSoyad+'</h4><div class="post-meta"><span>'+b.eposta+'</span><span>'+b.telefon+'</span><span>'+(b.il||'-')+'</span><span>'+new Date(b.tarih).toLocaleDateString('tr-TR')+'</span></div>'+(b.ekNot?'<p style="font-size:.8125rem;color:#666;margin-top:.5rem">'+b.ekNot+'</p>':'')+'</div></div>').join('')}catch(e){c.innerHTML='<div class="empty-state"><span class="material-symbols-outlined">error</span><p>Yuklenemedi.</p></div>'}}
 async function loadMesajlar(){const c=document.getElementById('mesajList');try{const r=await authFetch('/api/admin/mesajlar');const d=await r.json();if(!d.length){c.innerHTML='<div class="empty-state"><span class="material-symbols-outlined">inbox</span><p>Henuz mesaj yok.</p></div>';return}c.innerHTML=d.reverse().map(m=>'<div class="post-item"><div class="post-info"><h4>'+m.adSoyad+' - '+m.basvuruTipi+'</h4><div class="post-meta"><span>'+m.eposta+'</span><span>'+(m.telefon||'-')+'</span><span>'+new Date(m.tarih).toLocaleDateString('tr-TR')+'</span></div><p style="font-size:.8125rem;color:#666;margin-top:.5rem">'+m.mesaj+'</p></div></div>').join('')}catch(e){c.innerHTML='<div class="empty-state"><span class="material-symbols-outlined">error</span><p>Yuklenemedi.</p></div>'}}
+
+// ===== ZIYARETLER (site sayaci) =====
+let syGun=30;
+const SY_KAYNAK={dogrudan:'Doğrudan giriş',arama:'Arama motoru',sosyal:'Sosyal medya',reklam:'Reklam',eposta:'E-posta',diger:'Diğer siteler',ic:'Site içi gezinme'};
+const SY_CIHAZ={mobil:'Mobil',tablet:'Tablet',masaustu:'Masaüstü'};
+function syEsc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function syN(v){return v==null?'—':Number(v).toLocaleString('tr-TR')}
+function sySure(s){if(s==null)return '—';s=Math.round(s);if(s<60)return s+' sn';const d=Math.floor(s/60),k=s%60;return d+' dk'+(k?' '+k+' sn':'')}
+function syYuzde(v){return v==null?'—':'%'+String(v).replace('.',',')}
+function syDegisim(a,b){if(!b)return a?'yeni':'';const p=Math.round((a-b)/b*100);return '<span class="'+(p>=0?'sy-artis':'sy-azalis')+'">'+(p>=0?'+':'')+p+'%</span>'}
+function syCubuklar(liste){const max=Math.max(1,...liste.map(x=>x[1]));return liste.map(([ad,n,ek])=>'<div class="sy-cubuk"><span>'+syEsc(ad)+'</span><i style="width:'+Math.max(1,n/max*100).toFixed(1)+'%"></i><em>'+syN(n)+(ek?' <small>'+syEsc(ek)+'</small>':'')+'</em></div>').join('')}
+document.querySelectorAll('.sy-donem button').forEach(b=>b.addEventListener('click',()=>{syGun=Number(b.dataset.gun);document.querySelectorAll('.sy-donem button').forEach(x=>x.classList.toggle('on',x===b));loadZiyaretler()}));
+(function(){const k=document.getElementById('saymaKutusu');try{k.checked=localStorage.getItem('dp_sayma')==='1'}catch(e){k.disabled=true}
+  k.addEventListener('change',()=>{try{if(k.checked)localStorage.setItem('dp_sayma','1');else localStorage.removeItem('dp_sayma');showToast(k.checked?'Bu tarayıcıdaki ziyaretleriniz artık sayılmayacak.':'Bu tarayıcıdaki ziyaretleriniz yeniden sayılacak.')}catch(e){showToast('Tarayıcı bu ayarı saklamaya izin vermiyor.','error')}})})();
+async function loadZiyaretler(){
+  const c=document.getElementById('syIcerik');
+  try{
+    const r=await authFetch('/api/admin/sayac?gun='+syGun);
+    if(!r.ok)throw new Error('http '+r.status);
+    const d=await r.json(),t=d.toplam||{},o=d.onceki_donem||{};
+    if(!t.goruntulenme&&!(d.sayfalar||[]).length){c.innerHTML='<div class="empty-state"><span class="material-symbols-outlined">monitoring</span><p>Bu dönemde henüz kayıtlı ziyaret yok.'+(d.sayac_baslangici?'':' Sayaç yeni kuruldu; ilk ziyaretlerle dolacak.')+'</p></div>';return}
+    const kutular=[['Görüntülenme',syN(t.goruntulenme),'Önceki '+syGun+' gün: '+syN(o.goruntulenme)+(o.goruntulenme?' '+syDegisim(t.goruntulenme,o.goruntulenme):'')],
+      ['Siteye giriş',syN(t.giris),'Dışarıdan gelinen ilk sayfa'],['Ort. ekranda kalma',sySure(t.ort_sure_sn),'Sayfa başına · '+syN(t.olculen)+' ölçüm'],
+      ['Okuma oranı',syYuzde(t.okuma_orani),'Sayfanın %75\'ine inilen'],['Kısa kalma',syYuzde(t.kisa_kalma_orani),'10 saniyeden kısa']];
+    const gunluk=d.gunluk||[],gmax=Math.max(1,...gunluk.map(g=>g.goruntulenme));
+    const gunler='<div class="sy-gunler">'+gunluk.map(g=>'<div title="'+syEsc(new Date(g.gun+'T12:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long'})+': '+g.goruntulenme+' görüntülenme · '+g.giris+' giriş · ort. '+sySure(g.ort_sure_sn))+'" style="height:'+(g.goruntulenme/gmax*100).toFixed(1)+'%"></div>').join('')+'</div><div class="sy-eksen"><span>'+syEsc(gunluk[0]?.gun||'')+'</span><span>'+syEsc(gunluk.at(-1)?.gun||'')+'</span></div>';
+    const satirlar=(d.sayfalar||[]).map(p=>'<tr><td>'+syEsc(p.baslik)+'<small>'+syEsc(p.yol)+'</small></td><td class="n">'+syN(p.goruntulenme)+'</td><td class="n">'+syN(p.giris)+'</td><td class="n">'+sySure(p.ort_sure_sn)+'</td><td class="n">'+syYuzde(p.okuma_orani)+'</td><td class="n">'+syYuzde(p.kisa_kalma_orani)+'</td><td class="n">'+syN(p.son_7_gun)+' '+syDegisim(p.son_7_gun,p.onceki_7_gun)+'</td></tr>').join('');
+    const kay=d.kaynaklar||{},kaynak=Object.keys(SY_KAYNAK).map(k=>[SY_KAYNAK[k],kay[k]||0]).filter(x=>x[1]);
+    const yon=(d.yonlendirenler||[]).slice(0,10).map(x=>[x.alan,x.giris]);
+    const cih=t.cihaz||{},cihaz=Object.keys(SY_CIHAZ).map(k=>[SY_CIHAZ[k],cih[k]||0]).filter(x=>x[1]);
+    const dag=(t.dagilim||[]).map((n,i)=>[(d.dilimler||[])[i]||'',n]);
+    const kamp=(d.kampanyalar||[]).map(k=>'<tr><td>'+syEsc(k.kampanya||'—')+'<small>'+syEsc([k.kaynak,k.ortam].filter(Boolean).join(' / '))+'</small></td><td class="n">'+syN(k.goruntulenme)+'</td><td class="n">'+syN(k.giris)+'</td><td class="n">'+sySure(k.ort_sure_sn)+'</td><td>'+(k.sayfalar||[]).map(s=>syEsc(s.yol)).join('<br>')+'</td></tr>').join('');
+    c.innerHTML='<div class="sy-kutular">'+kutular.map(([a,b,e])=>'<div class="sy-kutu"><span>'+a+'</span><b>'+b+'</b><small>'+e+'</small></div>').join('')+'</div>'
+      +'<div class="sy-baslik">Günlük görüntülenme</div>'+gunler
+      +'<div class="sy-baslik">Sayfalar</div><div class="sy-kaydir"><table class="sy-tablo"><thead><tr><th>Sayfa</th><th class="n">Görüntülenme</th><th class="n">Giriş</th><th class="n">Ort. süre</th><th class="n">Okuma</th><th class="n">Kısa kalma</th><th class="n">Son 7 gün</th></tr></thead><tbody>'+satirlar+'</tbody></table></div>'
+      +'<div class="sy-iki"><div><div class="sy-baslik">Nereden geldiler?</div>'+(kaynak.length?syCubuklar(kaynak):'<p class="sy-not">Kayıt yok.</p>')+'</div><div><div class="sy-baslik">Yönlendiren siteler</div>'+(yon.length?syCubuklar(yon):'<p class="sy-not">Başka siteden giriş yok.</p>')+'</div></div>'
+      +'<div class="sy-iki"><div><div class="sy-baslik">Ekranda kalma dağılımı</div>'+syCubuklar(dag)+'</div><div><div class="sy-baslik">Cihaz</div>'+(cihaz.length?syCubuklar(cihaz):'<p class="sy-not">Kayıt yok.</p>')+'</div></div>'
+      +(kamp?'<div class="sy-baslik">Kampanya ve paylaşım bağlantıları (UTM)</div><div class="sy-kaydir"><table class="sy-tablo"><thead><tr><th>Kampanya</th><th class="n">Görüntülenme</th><th class="n">Giriş</th><th class="n">Ort. süre</th><th>Açılan sayfa</th></tr></thead><tbody>'+kamp+'</tbody></table></div>':'')
+      +'<ul class="sy-notlar">'+(d.notlar||[]).map(n=>'<li>'+syEsc(n)+'</li>').join('')+(d.sayac_baslangici?'<li>Sayaç başlangıcı: '+syEsc(d.sayac_baslangici)+'</li>':'')+'</ul>';
+  }catch(e){c.innerHTML='<div class="empty-state"><span class="material-symbols-outlined">error</span><p>Ziyaret bilgisi yüklenemedi.</p></div>'}
+}
 
 // Init
 checkSession();
