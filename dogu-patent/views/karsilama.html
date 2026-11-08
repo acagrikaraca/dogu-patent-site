@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-0VHX773GEG"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-0VHX773GEG');
+  </script>
+  <title>{{BASLIK}} | Doğu Patent</title>
+  <meta name="description" content="Doğu Patent uzmanı markanız için ücretsiz ön araştırma yapar. Türkiye’nin her yerinden, uzaktan."/>
+  <meta name="robots" content="noindex"/>
+  <!-- Site sayacı bu sayfayı ana sayfadan ayrı sayar (aynı adresten açılsa da). -->
+  <meta name="dp-sayac-yol" content="{{YOL}}"/>
+  <link rel="icon" type="image/png" href="/images/logo-icon.png"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link href="/css/shared.css" rel="stylesheet"/>
+  <style>
+    .k-ust { border-bottom: 1px solid rgba(195,199,207,0.35); background: var(--surface); }
+    .k-ust-ic { max-width: 1120px; margin: 0 auto; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+    .k-ust .nav-logo img { height: 32px; }
+    .k-ust .nav-logo span { font-size: 1.05rem; }
+    .k-tel { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--primary); font-weight: 700; font-size: 0.875rem; text-decoration: none; white-space: nowrap; }
+    .k-tel .material-symbols-outlined { font-size: 1.1rem; }
+
+    .k-ana { max-width: 1120px; margin: 0 auto; padding: 2.5rem 1rem 3rem; display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; }
+    .k-etiket { display: inline-block; padding: 0.25rem 0.6rem; background: var(--primary-container); color: #fff; font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 1rem; }
+    .k-bilgi h1 { font-size: clamp(1.75rem, 4vw, 2.75rem); font-weight: 800; color: var(--primary); line-height: 1.15; letter-spacing: -0.03em; margin-bottom: 1rem; }
+    .k-giris { font-size: 1.0625rem; color: var(--on-surface-variant); line-height: 1.6; margin-bottom: 1.5rem; }
+    .k-maddeler { list-style: none; display: grid; gap: 0.85rem; margin-bottom: 1.5rem; }
+    .k-maddeler li { display: flex; gap: 0.65rem; align-items: flex-start; color: var(--on-surface); font-size: 0.975rem; line-height: 1.5; }
+    .k-maddeler .material-symbols-outlined { color: var(--primary); font-size: 1.35rem; flex: none; margin-top: 1px; }
+    .k-guven { font-size: 0.8125rem; color: var(--secondary); }
+
+    .k-form-kutu { background: #fff; padding: 1.75rem; box-shadow: 0 16px 36px rgba(0,36,65,0.08); border-top: 4px solid var(--primary); }
+    .k-form-kutu h2 { font-size: 1.2rem; font-weight: 800; color: var(--primary); margin-bottom: 1.25rem; letter-spacing: -0.01em; }
+    .k-form { display: grid; gap: 1.1rem; }
+    .k-form[hidden], .k-basari[hidden] { display: none; }
+    .k-form-kutu:has(.k-form[hidden]) h2 { display: none; }
+    .k-alan { display: flex; flex-direction: column; gap: 0.35rem; }
+    .k-alan label { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; color: var(--secondary); text-transform: uppercase; }
+    .k-alan label small { font-weight: 500; text-transform: none; letter-spacing: 0; }
+    .k-alan input { border: 1px solid var(--outline-variant); background: #fff; padding: 0.8rem 0.85rem; font-size: 1rem; color: var(--primary); font-family: 'Inter', sans-serif; outline: none; border-radius: 2px; }
+    .k-alan input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(15,58,95,0.15); }
+    .k-ikili { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; }
+    .k-form .kvkk-notice { margin-top: 0.25rem; }
+    .k-gonder { width: 100%; background: var(--primary); color: #fff; padding: 1.05rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.875rem; border: none; cursor: pointer; font-family: 'Inter', sans-serif; transition: background 0.2s; }
+    .k-gonder:hover { background: var(--primary-container); }
+    .k-gonder:disabled { opacity: 0.6; cursor: not-allowed; }
+    .k-son-not { font-size: 0.8125rem; color: var(--secondary); margin-top: 0.9rem; line-height: 1.5; }
+    .k-basari { padding: 1rem 0 0.5rem; }
+    .k-basari h3 { font-size: 1.15rem; color: var(--primary); font-weight: 800; margin-bottom: 0.5rem; }
+    .k-basari p { color: var(--on-surface-variant); line-height: 1.6; }
+
+    .k-alt { border-top: 1px solid rgba(195,199,207,0.35); }
+    .k-alt-ic { max-width: 1120px; margin: 0 auto; padding: 1.25rem 1rem 2rem; display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; font-size: 0.8125rem; color: var(--secondary); }
+    .k-alt-ic a { color: var(--primary); }
+
+    @media (max-width: 860px) {
+      .k-ana { grid-template-columns: 1fr; gap: 1.75rem; padding-top: 1.5rem; }
+      .k-giris { margin-bottom: 1.1rem; }
+      .k-maddeler { margin-bottom: 1rem; }
+    }
+    @media (max-width: 480px) {
+      .k-ikili { grid-template-columns: 1fr; }
+      .k-form-kutu { padding: 1.25rem; }
+      .k-tel span.k-tel-yazi { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="k-ust">
+    <div class="k-ust-ic">
+      <a href="/" class="nav-logo">
+        <img src="/images/logo-icon.png" alt="Doğu Patent"/>
+        <span>Doğu Patent</span>
+      </a>
+      <a href="tel:08502428525" class="k-tel" onclick="try{gtag('event','telefon_tiklama',{sayfa:'karsilama'})}catch(e){}">
+        <span class="material-symbols-outlined" aria-hidden="true">call</span>
+        <span class="k-tel-yazi">0850 242 85 25</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="k-ana" data-surum="{{SURUM}}">
+    <section class="k-bilgi">
+      <span class="k-etiket">{{ETIKET}}</span>
+      <h1>{{BASLIK}}</h1>
+      <p class="k-giris">{{GIRIS}}</p>
+      <ul class="k-maddeler">
+          {{MADDELER}}
+      </ul>
+      <p class="k-guven">Doğu Patent · TÜRKPATENT yetkili vekil</p>
+    </section>
+
+    <section class="k-form-kutu" id="form" aria-labelledby="k-form-baslik">
+      <h2 id="k-form-baslik">{{FORM_BASLIK}}</h2>
+      <!-- method/action: JavaScript yüklenmezse bilgiler adres çubuğuna düşmesin diye (normalde main.js gönderir). -->
+      <form class="k-form marka-arastirma-form" method="post" action="/api/marka-arastirma" data-kvkk-versiyon="{{KVKK}}" data-basari="k-basari">
+        <div class="k-alan">
+          <label for="k-marka">Marka adı *</label>
+          <input id="k-marka" type="text" name="markaAdi" placeholder="Korumak istediğiniz ad" required maxlength="160" autocomplete="off"/>
+        </div>
+        <div class="k-alan">
+          <label for="k-is">{{IS_ETIKET}} <small>(isteğe bağlı)</small></label>
+          <input id="k-is" type="text" name="sektor" placeholder="{{IS_ORNEK}}" maxlength="160"/>
+        </div>
+        <div class="k-ikili">
+          <div class="k-alan">
+            <label for="k-ad">Ad soyad / unvan *</label>
+            <input id="k-ad" type="text" name="adSoyad" required maxlength="160" autocomplete="name"/>
+          </div>
+          <div class="k-alan">
+            <label for="k-tel">Telefon *</label>
+            <input id="k-tel" type="tel" name="telefon" placeholder="05xx xxx xx xx" required maxlength="40" autocomplete="tel"/>
+          </div>
+        </div>
+        <div class="k-alan">
+          <label for="k-eposta">E-posta <small>(isteğe bağlı)</small></label>
+          <input id="k-eposta" type="email" name="eposta" maxlength="160" autocomplete="email"/>
+        </div>
+        <div class="kvkk-notice">
+          <div class="kvkk-row">
+            <input type="checkbox" id="k-kvkk" name="kvkkOkundu" required aria-describedby="k-kvkk-bilgi"/>
+            <label for="k-kvkk"><a href="/kvkk-aydinlatma-metni" target="_blank" rel="noopener noreferrer">Aydınlatma Metni’ni</a> okudum ve anladım.</label>
+          </div>
+          <p id="k-kvkk-bilgi">Formda paylaştığınız bilgiler talebinizin değerlendirilmesi ve sizinle iletişim kurulması için kullanılır.</p>
+        </div>
+        <button type="submit" class="k-gonder">Ücretsiz ön araştırma iste</button>
+      </form>
+      <div class="k-basari" id="k-basari" hidden>
+        <h3>Talebiniz alındı</h3>
+        <p>Uzmanımız ön araştırmayı yapıp sizi arayacak. Beklemek istemezseniz <a href="tel:08502428525">0850 242 85 25</a> numarasından da ulaşabilirsiniz.</p>
+      </div>
+      <p class="k-son-not">{{SON_NOT}}</p>
+    </section>
+  </main>
+
+  <footer class="k-alt">
+    <div class="k-alt-ic">
+      <span>&copy; 2026 Doğu Patent</span>
+      <a href="/">Ana sayfa</a>
+      <a href="/hizmetlerimiz">Hizmetlerimiz</a>
+      <a href="/kvkk-aydinlatma-metni">KVKK Aydınlatma Metni</a>
+      <a href="mailto:info@dogupatent.com">info@dogupatent.com</a>
+    </div>
+  </footer>
+
+  <script src="/js/main.js"></script>
+</body>
+</html>

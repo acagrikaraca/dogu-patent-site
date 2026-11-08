@@ -73,11 +73,11 @@ function oran(a, b) { return b ? Math.round(a / b * 1000) / 10 : null; }
 function ortalama(a, b) { return b ? Math.round(a / b) : null; }
 
 function bosSatir(yol) {
-  return { yol, g: 0, e: 0, sk: 0, sn: 0, dk: 0, dt: 0, o: 0, ks: 0, b: [0, 0, 0, 0, 0, 0],
+  return { yol, g: 0, e: 0, sk: 0, sn: 0, dk: 0, dt: 0, o: 0, ks: 0, fb: 0, b: [0, 0, 0, 0, 0, 0],
            kay: Object.fromEntries(KAYNAK_TURLERI.map(k => [k, 0])), cih: Object.fromEntries(CIHAZLAR.map(k => [k, 0])) };
 }
 function satirEkle(hedef, kaynak) {
-  for (const k of ['g', 'e', 'sk', 'sn', 'dk', 'dt', 'o', 'ks']) hedef[k] += kaynak[k] || 0;
+  for (const k of ['g', 'e', 'sk', 'sn', 'dk', 'dt', 'o', 'ks', 'fb']) hedef[k] += kaynak[k] || 0;   // fb: forma dokunan (08.11)
   (kaynak.b || []).forEach((n, i) => { hedef.b[i] += n || 0; });
   for (const k of KAYNAK_TURLERI) hedef.kay[k] += (kaynak.kay || {})[k] || 0;
   for (const k of CIHAZLAR) hedef.cih[k] += (kaynak.cih || {})[k] || 0;
@@ -163,8 +163,16 @@ function olustur(secenek) {
                       c: CIHAZLAR.includes(govde.c) ? govde.c : '' };
       if (alan) kayit.r = alan;
       if (Object.keys(k).length) kayit.k = k;
+      if (govde.a === 1) kayit.a = 1;   // bağlantı sayfa içindeki bir bölüme atlattı: derinlik okuma sayılmaz
       if (!yaz(gun, kayit)) return false;
       aktif.set(id, { at: t, s: -1, d: -1 });
+      return true;
+    }
+    if (govde.t === 'f') {   // 08.11: forma dokunma (bir alana ilk giriş); içerik gelmez, açılış başına bir kez
+      const a = aktif.get(id);
+      if (a && a.f) return false;
+      if (!yaz(gun, { t: 'f', i: id })) return false;
+      if (a) a.f = 1;
       return true;
     }
     if (govde.t === 's') {
@@ -201,12 +209,16 @@ function olustur(secenek) {
       } catch (e) {}
     }
     const ziyaret = new Map();
-    const sureler = [];
+    const sureler = [], formlar = new Set();
     for (const x of satirlar(gun)) {
       if (x.t === 'g' && !ziyaret.has(x.i)) ziyaret.set(x.i, { ...x, s: -1, d: -1 });
       else if (x.t === 's') sureler.push(x);
+      else if (x.t === 'f') formlar.add(x.i);
     }
-    for (const x of satirlar(gunEkle(gun, 1))) if (x.t === 's') sureler.push(x);
+    for (const x of satirlar(gunEkle(gun, 1))) {
+      if (x.t === 's') sureler.push(x);
+      else if (x.t === 'f') formlar.add(x.i);
+    }
     for (const x of sureler) {
       const v = ziyaret.get(x.i);
       if (!v) continue;
@@ -223,15 +235,18 @@ function olustur(secenek) {
         r.sk++; r.sn += s; r.b[dilim(s)]++;
         if (s < KISA_ESIGI) r.ks++;
       }
-      if (v.d >= 0) { r.dk++; r.dt += v.d; if (v.d >= OKUMA_ESIGI) r.o++; }
+      if (v.d >= 0 && !v.a) { r.dk++; r.dt += v.d; if (v.d >= OKUMA_ESIGI) r.o++; }
+      const formaDokundu = formlar.has(v.i);
+      if (formaDokundu) r.fb++;
       if (KAYNAK_TURLERI.includes(v.rt)) r.kay[v.rt]++;
       if (CIHAZLAR.includes(v.c)) r.cih[v.c]++;
       if (Number.isInteger(v.h) && v.h >= 0 && v.h < 24) veri.saat[v.h]++;
       if (v.e && v.r) veri.ref[v.r] = (veri.ref[v.r] || 0) + 1;
       if (v.k && (v.k.s || v.k.m || v.k.c)) {
         const anahtar = [v.k.s || '', v.k.m || '', v.k.c || ''].join('|');
-        const kp = veri.kamp[anahtar] || (veri.kamp[anahtar] = { g: 0, e: 0, sk: 0, sn: 0, yollar: {} });
+        const kp = veri.kamp[anahtar] || (veri.kamp[anahtar] = { g: 0, e: 0, sk: 0, sn: 0, fb: 0, yollar: {} });
         kp.g++; if (v.e) kp.e++;
+        if (formaDokundu) kp.fb++;
         if (v.s >= 0) { kp.sk++; kp.sn += Math.min(SURE_SINIRI, v.s); }
         kp.yollar[v.p] = (kp.yollar[v.p] || 0) + 1;
       }
@@ -256,6 +271,7 @@ function olustur(secenek) {
       yol: r.yol, baslik: baslik(r.yol), tur: r.yol.startsWith('/blog/') ? 'blog_yazisi' : 'sayfa',
       goruntulenme: r.g, giris: r.e, olculen: r.sk, ort_sure_sn: ortalama(r.sn, r.sk), toplam_sure_sn: r.sn,
       okuma_orani: oran(r.o, r.dk), ort_derinlik: ortalama(r.dt, r.dk), kisa_kalma_orani: oran(r.ks, r.sk), dagilim: r.b,
+      form_baslatan: r.fb || 0, form_baslatma_orani: oran(r.fb || 0, r.g),
       kaynaklar: r.kay, cihaz: r.cih, son_7_gun: son7, onceki_7_gun: onceki7
     };
   }
@@ -282,8 +298,8 @@ function olustur(secenek) {
       }
       for (const [a, n] of Object.entries(g.ref)) ref[a] = (ref[a] || 0) + n;
       for (const [a, x] of Object.entries(g.kamp)) {
-        const k = kamp[a] || (kamp[a] = { g: 0, e: 0, sk: 0, sn: 0, yollar: {} });
-        k.g += x.g; k.e += x.e; k.sk += x.sk; k.sn += x.sn;
+        const k = kamp[a] || (kamp[a] = { g: 0, e: 0, sk: 0, sn: 0, fb: 0, yollar: {} });
+        k.g += x.g; k.e += x.e; k.sk += x.sk; k.sn += x.sn; k.fb += x.fb || 0;
         for (const [y, n] of Object.entries(x.yollar || {})) k.yollar[y] = (k.yollar[y] || 0) + n;
       }
       g.saat.forEach((n, i) => { saat[i] += n; });
@@ -299,7 +315,7 @@ function olustur(secenek) {
         goruntulenme: toplamSatir.g, giris: toplamSatir.e, olculen: toplamSatir.sk,
         ort_sure_sn: ortalama(toplamSatir.sn, toplamSatir.sk), toplam_sure_sn: toplamSatir.sn,
         okuma_orani: oran(toplamSatir.o, toplamSatir.dk), kisa_kalma_orani: oran(toplamSatir.ks, toplamSatir.sk),
-        dagilim: toplamSatir.b, cihaz: toplamSatir.cih
+        form_baslatan: toplamSatir.fb, dagilim: toplamSatir.b, cihaz: toplamSatir.cih
       },
       onceki_donem: { bas: oncekiGunler[0], son: oncekiGunler[oncekiGunler.length - 1], goruntulenme: onceki.g, giris: onceki.e,
                       ort_sure_sn: ortalama(onceki.sn, onceki.sk) },
@@ -314,7 +330,7 @@ function olustur(secenek) {
       yonlendirenler: Object.entries(ref).sort((a, b) => b[1] - a[1]).slice(0, 25).map(([alan, n]) => ({ alan, giris: n, tur: kaynakTuru(false, alan, {}) })),
       kampanyalar: Object.entries(kamp).sort((a, b) => b[1].g - a[1].g).slice(0, 40).map(([a, x]) => {
         const [kaynak, ortam, kampanya] = a.split('|');
-        return { kaynak, ortam, kampanya, goruntulenme: x.g, giris: x.e, ort_sure_sn: ortalama(x.sn, x.sk),
+        return { kaynak, ortam, kampanya, goruntulenme: x.g, giris: x.e, ort_sure_sn: ortalama(x.sn, x.sk), form_baslatan: x.fb,
                  sayfalar: Object.entries(x.yollar).sort((p, q) => q[1] - p[1]).slice(0, 5).map(([yol, n]) => ({ yol, goruntulenme: n })) };
       }),
       saatler: saat,
@@ -323,7 +339,8 @@ function olustur(secenek) {
         'Yalnız JavaScript çalıştıran tarayıcılar sayılır; arama motoru botları ve otomasyon araçları sayılmaz.',
         'Süre, sayfanın ekranda açık (görünür) kaldığı süredir; tek görüntülemede en çok 30 dakika sayılır.',
         'Benzersiz ziyaretçi sayılmaz (çerez ve kalıcı kimlik yok). "Giriş", siteye dışarıdan gelinen ilk sayfa görüntülemesidir.',
-        'Okuma oranı, sayfanın en az %75\'ine kadar inilen görüntülemelerin payıdır; ekrana sığan kısa sayfalarda yüksek görünür.',
+        'Okuma oranı, sayfanın en az %75\'ine kadar inilen görüntülemelerin payıdır; ekrana sığan kısa sayfalarda yüksek görünür. Bağlantıyla sayfa içindeki bir bölüme (#...) atlanan açılışlar 08.11.2026\'dan beri okuma oranına katılmaz.',
+        'Forma dokunan: bir form alanına en az bir kez girilen görüntüleme (08.11.2026\'dan beri; yazılan içerik gelmez).',
         'Yönetici panelinde "sayma" işaretlenen tarayıcının ziyaretleri sayılmaz.'
       ]
     };
@@ -331,7 +348,7 @@ function olustur(secenek) {
       sonuc.gunler = gunluk.map(g => ({ gun: g.gun, goruntulenme: g.g, giris: g.e, saatler: g.saat, yonlendirenler: g.ref,
                                         kampanyalar: g.kamp, sayfalar: Object.values(g.sayfalar) }));
       sonuc.alanlar = { g: 'görüntülenme', e: 'giriş', sk: 'süresi ölçülen', sn: 'toplam süre (sn)', dk: 'derinliği ölçülen',
-                        dt: 'toplam derinlik (%)', o: 'okunan (%75+)', ks: 'kısa kalma (<10 sn)', b: 'süre dağılımı', kay: 'kaynak türü', cih: 'cihaz' };
+                        dt: 'toplam derinlik (%)', o: 'okunan (%75+)', ks: 'kısa kalma (<10 sn)', fb: 'forma dokunan', b: 'süre dağılımı', kay: 'kaynak türü', cih: 'cihaz' };
     }
     return sonuc;
   }

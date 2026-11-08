@@ -8,6 +8,7 @@ const multer = require('multer');
 const nodemailer = require('nodemailer');
 const blogSeo = require('./blog-seo');
 const sayacModulu = require('./sayac');
+const karsilama = require('./karsilama');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -207,7 +208,7 @@ function generateSlug(title) {
 
 // ===== Site sayacı (gizli; yalnız yönetici oturumu ve ajan sistemi okur) =====
 // Görüntülenme, sayfada kalma süresi, kaydırma derinliği ve geliş kaynağı. Kişisel veri tutulmaz (ayrıntı sayac.js).
-const SAYFA_ADLARI = { '/': 'Ana sayfa', '/hizmetlerimiz': 'Hizmetlerimiz', '/hakkimizda': 'Hakkımızda', '/blog': 'Blog',
+const SAYFA_ADLARI = { '/': 'Ana sayfa', [karsilama.YOL]: 'Reklam karşılama: ücretsiz marka ön araştırması', '/hizmetlerimiz': 'Hizmetlerimiz', '/hakkimizda': 'Hakkımızda', '/blog': 'Blog',
   '/iletisim': 'İletişim', '/kvkk-aydinlatma-metni': 'KVKK aydınlatma metni', '/404': 'Bulunamayan adres (404)' };
 let yayindakiSluglar = { at: 0, set: new Set() };
 function sayacYolu(ham) {
@@ -227,7 +228,14 @@ function sayacYolu(ham) {
 }
 
 // ===== Pages =====
-app.get('/', (req, res) => res.sendFile(path.join(VIEWS_ROOT, 'index.html')));
+// 08.11: tanınan reklam kampanyasıyla (utm_campaign) gelen ziyaretçi ana sayfa yerine karşılama sayfasını görür.
+// Aynı adresi açan herkes aynı sayfayı görür; kampanya listesi karsilama.js içindedir.
+app.get('/', (req, res) => {
+  const secim = karsilama.sec(req.query);
+  if (secim) return res.type('html').send(karsilama.render(secim, VIEWS_ROOT, { kvkk: KVKK_VERSION }));
+  res.sendFile(path.join(VIEWS_ROOT, 'index.html'));
+});
+app.get(karsilama.YOL, (req, res) => res.type('html').send(karsilama.render(karsilama.sec(req.query, true), VIEWS_ROOT, { kvkk: KVKK_VERSION })));
 app.get('/hizmetlerimiz', (req, res) => res.sendFile(path.join(VIEWS_ROOT, 'hizmetlerimiz.html')));
 app.get('/hakkimizda', (req, res) => res.sendFile(path.join(VIEWS_ROOT, 'hakkimizda.html')));
 app.get('/blog', (req, res) => res.type('html').send(blogSeo.renderBlog(fs.readFileSync(path.join(VIEWS_ROOT, 'blog.html'), 'utf8'), getBlogPosts())));
@@ -358,7 +366,8 @@ app.post('/api/marka-arastirma', async (req, res) => {
   const { markaAdi, sektor, sektör, adSoyad, telefon, eposta, il, ekNot } = req.body;
   const sektorDegeri = sektor || sektör || '';
 
-  if (!markaAdi || !adSoyad || !telefon || !eposta) {
+  // 08.11: e-posta isteğe bağlı (zorunlu: marka adı, ad, telefon).
+  if (!markaAdi || !adSoyad || !telefon) {
     return res.status(400).json({ success: false, message: 'Lütfen zorunlu alanları doldurun.' });
   }
   if (req.body.kvkkOkundu !== true || req.body.kvkkVersiyon !== KVKK_VERSION) {
@@ -367,7 +376,7 @@ app.post('/api/marka-arastirma', async (req, res) => {
 
   const sub = {
     id: Date.now(), tarih: new Date().toISOString(),
-    markaAdi, sektor: sektorDegeri, adSoyad, telefon, eposta,
+    markaAdi, sektor: sektorDegeri, adSoyad, telefon, eposta: eposta || '',
     il: il || '', ekNot: ekNot || '', durum: 'Yeni',
     kaynak: temizKaynak(req.body.kaynak),
     aydinlatma: { okundu: true, versiyon: KVKK_VERSION, tarih: new Date().toISOString() }
@@ -384,7 +393,7 @@ app.post('/api/marka-arastirma', async (req, res) => {
     const tarihStr = new Date(sub.tarih).toLocaleString('tr-TR');
     await mailGonder(
       `Yeni Marka Araştırma Başvurusu - ${markaAdi}`,
-      `Yeni başvuru alındı.\n\nReferans No: ${sub.id}\nTarih: ${tarihStr}\nMarka Adı: ${markaAdi}\nSektör: ${sektorDegeri}\nAd Soyad: ${adSoyad}\nTelefon: ${telefon}\nE-posta: ${eposta}\nİl: ${il || '-'}\nEk Not: ${ekNot || '-'}\nKaynak: ${kaynakOzeti(sub.kaynak)}`,
+      `Yeni başvuru alındı.\n\nReferans No: ${sub.id}\nTarih: ${tarihStr}\nMarka Adı: ${markaAdi}\nSektör: ${sektorDegeri}\nAd Soyad: ${adSoyad}\nTelefon: ${telefon}\nE-posta: ${eposta || '-'}\nİl: ${il || '-'}\nEk Not: ${ekNot || '-'}\nKaynak: ${kaynakOzeti(sub.kaynak)}`,
       `<h2 style="color:#1a237e;">Yeni Marka Araştırma Başvurusu</h2>
        <table style="border-collapse:collapse;width:100%;font-family:Arial,sans-serif;font-size:14px;">
          <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;width:160px;">Referans No</td><td style="padding:8px;border:1px solid #ddd;">${sub.id}</td></tr>
@@ -393,7 +402,7 @@ app.post('/api/marka-arastirma', async (req, res) => {
          <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">Sektör</td><td style="padding:8px;border:1px solid #ddd;">${sektorDegeri || '-'}</td></tr>
          <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">Ad Soyad</td><td style="padding:8px;border:1px solid #ddd;">${adSoyad}</td></tr>
          <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">Telefon</td><td style="padding:8px;border:1px solid #ddd;">${telefon}</td></tr>
-         <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">E-posta</td><td style="padding:8px;border:1px solid #ddd;">${eposta}</td></tr>
+         <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">E-posta</td><td style="padding:8px;border:1px solid #ddd;">${eposta || '-'}</td></tr>
          <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">İl</td><td style="padding:8px;border:1px solid #ddd;">${il || '-'}</td></tr>
          <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">Ek Not</td><td style="padding:8px;border:1px solid #ddd;">${ekNot || '-'}</td></tr>
          <tr><td style="padding:8px;border:1px solid #ddd;background:#f5f5f5;font-weight:bold;">Kaynak</td><td style="padding:8px;border:1px solid #ddd;">${kaynakOzeti(sub.kaynak)}</td></tr>

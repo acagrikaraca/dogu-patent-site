@@ -91,8 +91,10 @@ dpKaynakYakala();
     } catch (e) {
       id = (Date.now().toString(36) + Math.random().toString(36).slice(2)).replace(/[^a-z0-9]/g, '').slice(0, 20);
     }
-    var yol = window.location.pathname.slice(0, 200);
-    var gorunur = null, birikmis = 0, derinlik = 0, sonGonderilen = '', basladi = false, bekleyen = false;
+    // Reklam karşılama sayfası ana sayfa adresinden açılsa da ayrı sayılır (sayfa kendi yolunu meta etiketiyle verir).
+    var yolEtiketi = document.querySelector('meta[name="dp-sayac-yol"]');
+    var yol = ((yolEtiketi && yolEtiketi.getAttribute('content')) || window.location.pathname).slice(0, 200);
+    var gorunur = null, birikmis = 0, derinlik = 0, sonGonderilen = '', basladi = false, bekleyen = false, formBasladi = false;
     function simdi() { return (window.performance && performance.now) ? performance.now() : Date.now(); }
     function sure() { return Math.round((birikmis + (gorunur === null ? 0 : simdi() - gorunur)) / 1000); }
     function olcDerinlik() {
@@ -126,8 +128,13 @@ dpKaynakYakala();
       var en = window.innerWidth || 0;
       var dokunmatik = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
       var cihaz = en < 768 ? 'mobil' : (dokunmatik && en < 1200 ? 'tablet' : 'masaustu');
+      // Bağlantı sayfanın içindeki bir bölüme (#...) atlattıysa derinlik okumayı göstermez; sunucu bu açılışta derinliği saymaz.
+      var capa = 0;
+      try { capa = window.location.hash.length > 1 && document.getElementById(decodeURIComponent(window.location.hash.slice(1))) ? 1 : 0; } catch (e) {}
       olcDerinlik();
-      gonder({ v: 1, t: 'g', i: id, p: yol, r: gelen, ic: ic ? 1 : 0, k: etiket, c: cihaz });
+      var ilk = { v: 1, t: 'g', i: id, p: yol, r: gelen, ic: ic ? 1 : 0, k: etiket, c: cihaz };
+      if (capa) ilk.a = 1;
+      gonder(ilk);
     }
     function guncelle() {
       if (!basladi) return;
@@ -146,6 +153,13 @@ dpKaynakYakala();
     window.addEventListener('pagehide', function () { durdur(); guncelle(); });
     window.addEventListener('pageshow', function (e) {
       if (e.persisted && document.visibilityState === 'visible' && gorunur === null) gorunur = simdi();
+    });
+    // Forma dokunma: bir form alanına ilk kez girildiğinde tek olay. Yazılan içerik gönderilmez.
+    document.addEventListener('focusin', function (e) {
+      if (formBasladi || !basladi || !e.target || !e.target.closest) return;
+      if (!e.target.closest('form.marka-arastirma-form, form.iletisim-form')) return;
+      formBasladi = true;
+      gonder({ v: 1, t: 'f', i: id, p: yol });
     });
     window.addEventListener('scroll', function () {
       if (bekleyen) return;
@@ -196,6 +210,9 @@ function initMarkaForm() {
           showToast(data.message);
           dpDonusum('on_arastirma');
           form.reset();
+          // Karşılama sayfası: form yerine kalıcı teşekkür kutusu gösterilir.
+          const basari = form.dataset.basari && document.getElementById(form.dataset.basari);
+          if (basari) { form.hidden = true; basari.hidden = false; basari.scrollIntoView({ block: 'center' }); }
         } else {
           showToast(data.message, true);
         }
