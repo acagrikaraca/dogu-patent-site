@@ -242,9 +242,25 @@ app.get('/blog', (req, res) => res.type('html').send(blogSeo.renderBlog(fs.readF
 app.get('/iletisim', (req, res) => res.sendFile(path.join(VIEWS_ROOT, 'iletisim.html')));
 app.get('/kvkk-aydinlatma-metni', (req, res) => res.sendFile(path.join(VIEWS_ROOT, 'kvkk.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(VIEWS_ROOT, 'admin.html')));
+// 09.11: adresi değişen yazının eski adresi (eskiSluglar) yeni adrese kalıcı yönlendirilir; sorgu (UTM) korunur.
+function eskiAdresliYazi(posts, slug) {
+  return posts.find(p => p.yayinda && Array.isArray(p.eskiSluglar) && p.eskiSluglar.includes(slug));
+}
+const SLUG_KALIBI = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+function slugKullanimda(posts, slug, haricId) {
+  return posts.some(p => p.id !== haricId && (p.slug === slug || (Array.isArray(p.eskiSluglar) && p.eskiSluglar.includes(slug))));
+}
 app.get('/blog/:slug', (req, res) => {
   const template = fs.readFileSync(path.join(VIEWS_ROOT, 'blog-detay.html'), 'utf8');
-  const post = getBlogPosts().find(p => p.yayinda && p.slug === req.params.slug);
+  const posts = getBlogPosts();
+  const post = posts.find(p => p.yayinda && p.slug === req.params.slug);
+  if (!post) {
+    const tasinan = eskiAdresliYazi(posts, req.params.slug);
+    if (tasinan) {
+      const sorgu = req.originalUrl.includes('?') ? req.originalUrl.slice(req.originalUrl.indexOf('?')) : '';
+      return res.redirect(301, '/blog/' + encodeURIComponent(tasinan.slug) + sorgu);
+    }
+  }
   res.status(post ? 200 : 404).type('html').send(post ? blogSeo.renderPost(template, post) : blogSeo.renderNotFound(template));
 });
 app.get('/sitemap.xml', (req, res) => res.type('application/xml').send(blogSeo.sitemap(getBlogPosts())));
@@ -276,7 +292,8 @@ app.get('/api/blog', (req, res) => {
   res.json(posts);
 });
 app.get('/api/blog/:slug', (req, res) => {
-  const post = getBlogPosts().find(p => p.slug === req.params.slug && p.yayinda);
+  const posts = getBlogPosts();
+  const post = posts.find(p => p.slug === req.params.slug && p.yayinda) || eskiAdresliYazi(posts, req.params.slug);
   if (post) return res.json(post);
   res.status(404).json({ error: 'Yazı bulunamadı' });
 });
@@ -293,7 +310,7 @@ app.post('/api/admin/blog', adminAuth, upload.single('gorsel'), (req, res) => {
   if (!baslik || !icerik) return res.status(400).json({ success: false, message: 'Başlık ve içerik zorunludur.' });
   const posts = getBlogPosts();
   const newSlug = slug || generateSlug(baslik);
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(newSlug) || newSlug.length > 180 || posts.some(p => p.slug === newSlug)) {
+  if (!SLUG_KALIBI.test(newSlug) || newSlug.length > 180 || slugKullanimda(posts, newSlug)) {
     if (req.file) fs.unlink(req.file.path, () => {});
     return res.status(400).json({ success:false, message:'Yazı adresi geçersiz veya kullanımda.' });
   }
@@ -329,6 +346,18 @@ app.put('/api/admin/blog/:id', adminAuth, upload.single('gorsel'), (req, res) =>
   if (idx === -1) return res.status(404).json({ success: false, message: 'Yazı bulunamadı.' });
   const { baslik, kategori, ozet, icerik, okumaSuresi, oneCikan, yayinda } = req.body;
   // Published addresses stay stable when an editor changes a title.
+  // 09.11: adres yalnız açıkça `slug` gönderilirse değişir; eski adres eskiSluglar'a girer ve yeni adrese yönlendirilir.
+  const yeniSlug = req.body.slug === undefined ? '' : String(req.body.slug).trim();
+  if (yeniSlug && yeniSlug !== posts[idx].slug) {
+    if (!SLUG_KALIBI.test(yeniSlug) || yeniSlug.length > 180 || slugKullanimda(posts, yeniSlug, posts[idx].id)) {
+      if (req.file) fs.unlink(req.file.path, () => {});
+      return res.status(400).json({ success: false, message: 'Yazı adresi geçersiz veya kullanımda.' });
+    }
+    const eski = (Array.isArray(posts[idx].eskiSluglar) ? posts[idx].eskiSluglar : []).filter(s => s !== yeniSlug);
+    if (posts[idx].slug && !eski.includes(posts[idx].slug)) eski.push(posts[idx].slug);
+    posts[idx].eskiSluglar = eski;
+    posts[idx].slug = yeniSlug;
+  }
   if (baslik) posts[idx].baslik = baslik;
   for (const [key, limit] of [['seoTitle',180],['metaDescription',320],['gorselAlt',300]]) {
     if (req.body[key] !== undefined) posts[idx][key] = String(req.body[key]).slice(0,limit);

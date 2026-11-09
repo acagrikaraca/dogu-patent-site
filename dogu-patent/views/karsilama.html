@@ -27,10 +27,17 @@
     .k-tel { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--primary); font-weight: 700; font-size: 0.875rem; text-decoration: none; white-space: nowrap; }
     .k-tel .material-symbols-outlined { font-size: 1.1rem; }
 
-    .k-ana { max-width: 1120px; margin: 0 auto; padding: 2.5rem 1rem 3rem; display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; }
+    .k-ana { max-width: 1120px; margin: 0 auto; padding: 2.5rem 1rem 3rem; display: grid; grid-template-columns: 1fr 1fr;
+             grid-template-areas: "bas form" "aciklama form"; column-gap: 3rem; row-gap: 1.75rem; align-items: start; }
+    .k-bas { grid-area: bas; }
+    .k-form-kutu { grid-area: form; }
+    .k-aciklama { grid-area: aciklama; }
+    .k-gizli { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
     .k-etiket { display: inline-block; padding: 0.25rem 0.6rem; background: var(--primary-container); color: #fff; font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 1rem; }
-    .k-bilgi h1 { font-size: clamp(1.75rem, 4vw, 2.75rem); font-weight: 800; color: var(--primary); line-height: 1.15; letter-spacing: -0.03em; margin-bottom: 1rem; }
-    .k-giris { font-size: 1.0625rem; color: var(--on-surface-variant); line-height: 1.6; margin-bottom: 1.5rem; }
+    .k-bas h1 { font-size: clamp(1.75rem, 4vw, 2.75rem); font-weight: 800; color: var(--primary); line-height: 1.15; letter-spacing: -0.03em; margin-bottom: 0.85rem; }
+    .k-cumle { font-size: 1.125rem; color: var(--on-surface); line-height: 1.5; font-weight: 500; }
+    .k-giris { font-size: 1rem; color: var(--on-surface-variant); line-height: 1.6; margin-bottom: 1.25rem; }
+    .k-uzaktan { font-size: 0.975rem; color: var(--on-surface); margin-bottom: 0.5rem; }
     .k-maddeler { list-style: none; display: grid; gap: 0.85rem; margin-bottom: 1.5rem; }
     .k-maddeler li { display: flex; gap: 0.65rem; align-items: flex-start; color: var(--on-surface); font-size: 0.975rem; line-height: 1.5; }
     .k-maddeler .material-symbols-outlined { color: var(--primary); font-size: 1.35rem; flex: none; margin-top: 1px; }
@@ -61,7 +68,10 @@
     .k-alt-ic a { color: var(--primary); }
 
     @media (max-width: 860px) {
-      .k-ana { grid-template-columns: 1fr; gap: 1.75rem; padding-top: 1.5rem; }
+      .k-ana { grid-template-columns: 1fr; grid-template-areas: "bas" "form" "aciklama"; row-gap: 1.25rem; padding-top: 1.25rem; }
+      .k-etiket { display: none; }
+      .k-bas h1 { font-size: 1.65rem; margin-bottom: 0.6rem; }
+      .k-cumle { font-size: 1.0625rem; }
       .k-giris { margin-bottom: 1.1rem; }
       .k-maddeler { margin-bottom: 1rem; }
     }
@@ -86,19 +96,16 @@
     </div>
   </header>
 
+  <!-- 09.11: mobilde ilk ekranda başlık, tek cümle ve formun ilk alanı görünür; açıklama formun altındadır. -->
   <main class="k-ana" data-surum="{{SURUM}}">
-    <section class="k-bilgi">
+    <section class="k-bas">
       <span class="k-etiket">{{ETIKET}}</span>
       <h1>{{BASLIK}}</h1>
-      <p class="k-giris">{{GIRIS}}</p>
-      <ul class="k-maddeler">
-          {{MADDELER}}
-      </ul>
-      <p class="k-guven">Doğu Patent · TÜRKPATENT yetkili vekil</p>
+      <p class="k-cumle">{{CUMLE}}</p>
     </section>
 
     <section class="k-form-kutu" id="form" aria-labelledby="k-form-baslik">
-      <h2 id="k-form-baslik">{{FORM_BASLIK}}</h2>
+      <h2 id="k-form-baslik" class="k-gizli">{{FORM_BASLIK}}</h2>
       <!-- method/action: JavaScript yüklenmezse bilgiler adres çubuğuna düşmesin diye (normalde main.js gönderir). -->
       <form class="k-form marka-arastirma-form" method="post" action="/api/marka-arastirma" data-kvkk-versiyon="{{KVKK}}" data-basari="k-basari">
         <div class="k-alan">
@@ -137,6 +144,15 @@
         <p>Uzmanımız ön araştırmayı yapıp sizi arayacak. Beklemek istemezseniz <a href="tel:08502428525">0850 242 85 25</a> numarasından da ulaşabilirsiniz.</p>
       </div>
       <p class="k-son-not">{{SON_NOT}}</p>
+    </section>
+
+    <section class="k-aciklama">
+      <p class="k-giris">{{GIRIS}}</p>
+      <ol class="k-maddeler">
+          {{MADDELER}}
+      </ol>
+      <p class="k-uzaktan">{{UZAKTAN}}</p>
+      <p class="k-guven">Doğu Patent · TÜRKPATENT yetkili vekil</p>
     </section>
   </main>
 

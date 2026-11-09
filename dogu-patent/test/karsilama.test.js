@@ -63,6 +63,20 @@ test('Karşılama metni: reklamla aynı başlık, kaçışlı, yasak ifade ve b�
   }
 });
 
+test('Karşılama 09.11: başlık → tek cümle → form → açıklama sırası (mobil ilk ekran)', () => {
+  for (const kod of ['2A', '2B']) {
+    const s = karsilama.ICERIK[kod];
+    const html = karsilama.render(karsilama.sec({ utm_campaign: 'rek2_kobi_marka_tasarim', utm_content: kod }), VIEWS, { kvkk: '2026-10-23' });
+    const h1 = html.indexOf(`<h1>${s.baslik}</h1>`), cumle = html.indexOf(s.cumle), form = html.indexOf('name="markaAdi"');
+    const giris = html.indexOf(s.giris), uzaktan = html.indexOf(karsilama.UZAKTAN);
+    assert.ok(s.cumle && h1 > 0 && cumle > h1 && form > cumle, 'tek cümle başlığın altında, form hemen ardından');
+    assert.ok(giris > form && uzaktan > form, 'açıklama ve uzaktan çalışma satırı formun altında');
+    assert.ok(html.indexOf(karsilama.SON_NOT) > form, 'ücretsizlik ve TÜRKPATENT notu kalır');
+    assert.equal((html.match(/<input\b/g) || []).length, 6, 'form alanları değişmedi (5 alan + aydınlatma kutusu)');
+    assert.ok(!/yüz yüze|ofisimiz|Erzurum/i.test(html));
+  }
+});
+
 test('Site: reklam adresi karşılamayı, düz adres ana sayfayı açar; e-postasız başvuru kabul edilir', async () => {
   const s = await sunucu();
   try {
