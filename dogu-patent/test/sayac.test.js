@@ -186,7 +186,9 @@ test('Site: ziyaretçi ucu boş 204 döner, sayılar yalnız yönetici oturumuyl
     assert.equal(o.kampanyalar[0].kampanya, 'EK-1');
     const ayr = await (await fetch(s.url + '/api/admin/sayac?gun=3&ayrinti=1', { headers: { 'x-admin-token': token } })).json();
     assert.equal(ayr.gunler.length, 3);
-    const dosyalar = readdirSync(path.join(s.dataDir, 'sayac'));
+    const tum = readdirSync(path.join(s.dataDir, 'sayac'));
+    assert.ok(tum.includes('olcum-baslangic.json'), 'İ4: telefon ölçümünün başladığı gün kaydedilir');
+    const dosyalar = tum.filter(a => a.startsWith('olay-'));
     assert.equal(dosyalar.length, 1);
     const ham = readFileSync(path.join(s.dataDir, 'sayac', dosyalar[0]), 'utf8');
     assert.ok(!ham.includes('127.0.0.1') && !ham.includes('Safari'), 'IP ve tarayıcı bilgisi saklanmaz');
@@ -196,4 +198,47 @@ test('Site: ziyaretçi ucu boş 204 döner, sayılar yalnız yönetici oturumuyl
     assert.match(js, /\/api\/olcum/);
     assert.match(await (await fetch(s.url + '/kvkk-aydinlatma-metni')).text(), /\/js\/main\.js/);
   } finally { await s.dur(); }
+});
+
+test('İ4: telefona dokunma açılış başına bir kez; sayfa, kampanya ve ölçüm başlangıcı', () => {
+  const k = kur('2026-11-12T09:00:00Z');
+  try {
+    ziyaret(k.sayac, { t: 'g', i: 'tttt1111uuuu2222', p: '/iletisim', k: { s: 'meta', m: 'paid_social', c: 'rek_tel' } });
+    assert.equal(ziyaret(k.sayac, { t: 't', i: 'tttt1111uuuu2222', p: '/iletisim' }), true);
+    assert.equal(ziyaret(k.sayac, { t: 't', i: 'tttt1111uuuu2222', p: '/iletisim' }), false, 'ikinci basış yazılmaz');
+    ziyaret(k.sayac, { t: 'g', i: 'vvvv1111wwww2222', p: '/iletisim' });
+    ziyaret(k.sayac, { t: 'g', i: 'xxxx1111yyyy2222', p: '/' });
+    ziyaret(k.sayac, { t: 't', i: 'zzzz1111zzzz2222' });   // görüntülenmesi olmayan açılış sayılmaz
+    const o = k.sayac.ozet({ gun: 1 });
+    const il = o.sayfalar.find(p => p.yol === '/iletisim');
+    assert.deepEqual([il.telefon_tiklayan, il.telefon_tiklama_orani, il.form_baslatan], [1, 50, 0]);
+    assert.equal(o.sayfalar.find(p => p.yol === '/').telefon_tiklayan, 0);
+    assert.equal(o.toplam.telefon_tiklayan, 1);
+    assert.equal(o.kampanyalar.find(x => x.kampanya === 'rek_tel').telefon_tiklayan, 1);
+    assert.equal(o.telefon_olcum_baslangici, '2026-11-12');
+    assert.ok(o.notlar.some(n => n.startsWith('Telefona dokunan') && n.includes('2026-11-12')));
+    const ham = readFileSync(path.join(k.kok, 'olay-2026-11-12.jsonl'), 'utf8');
+    assert.ok(ham.includes('{"t":"t","i":"tttt1111uuuu2222"}'), 'yalnız olay türü ve açılış kimliği yazılır');
+    assert.ok(!ham.includes('0850'), 'numara gelmez');
+    const ayr = k.sayac.ozet({ gun: 1, ayrinti: true });
+    assert.equal(ayr.gunler[0].sayfalar.find(x => x.yol === '/iletisim').tb, 1);
+    assert.equal(ayr.gunler[0].kampanyalar['meta|paid_social|rek_tel'].tb, 1);
+    assert.equal(ayr.alanlar.tb, 'telefona dokunan');
+    // ölçüm başlangıcı bir kez yazılır; sunucu sonraki gün yeniden açılsa da değişmez
+    k.saat.t = Date.parse('2026-11-20T09:00:00Z');
+    assert.equal(k.yeni().ozet({ gun: 1 }).telefon_olcum_baslangici, '2026-11-12');
+  } finally { k.temizle(); }
+});
+
+test('İ4: telefon alanı olmayan eski gün özeti 0 sayılır, hata vermez', () => {
+  const k = kur('2026-11-12T09:00:00Z');
+  try {
+    const eski = { gun: '2026-11-05', g: 1, e: 1, sayfalar: { '/': { yol: '/', g: 1, e: 1, sk: 0, sn: 0, dk: 0, dt: 0, o: 0, ks: 0, fb: 0,
+      b: [0, 0, 0, 0, 0, 0], kay: { dogrudan: 1 }, cih: {} } }, ref: {}, kamp: { 'a|b|c': { g: 1, e: 1, sk: 0, sn: 0, fb: 0, yollar: { '/': 1 } } }, saat: Array(24).fill(0) };
+    writeFileSync(path.join(k.kok, 'gun-2026-11-05.json'), JSON.stringify(eski));
+    const o = k.yeni().ozet({ gun: 14 });
+    assert.equal(o.toplam.goruntulenme, 1);
+    assert.equal(o.toplam.telefon_tiklayan, 0);
+    assert.equal(o.kampanyalar[0].telefon_tiklayan, 0);
+  } finally { k.temizle(); }
 });

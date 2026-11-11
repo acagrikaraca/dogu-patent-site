@@ -14,6 +14,7 @@ const KISA_ESIGI = 10;                    // 10 saniyeden kısa kalınan görün
 const HAM_SAKLAMA_GUN = 120;
 const OZET_SAKLAMA_GUN = 800;
 const GUNLUK_DOSYA_SINIRI = 25 * 1024 * 1024;
+const OLCUM_DOSYASI = 'olcum-baslangic.json';   // yeni ölçülen olayların ilk günü (ör. telefona dokunma); öncesi 0 değil, ölçülmedi
 const DAKIKA_SINIRI = 900;                // bütün site için dakikada en çok olay (kötüye kullanım sigortası)
 const ADRES_SINIRI = 240;                 // aynı bağlantıdan 10 dakikada en çok olay; adres saklanmaz, yalnız bellekte sayılır
 const KAYNAK_TURLERI = ['dogrudan', 'arama', 'sosyal', 'reklam', 'eposta', 'ic', 'diger'];
@@ -73,11 +74,12 @@ function oran(a, b) { return b ? Math.round(a / b * 1000) / 10 : null; }
 function ortalama(a, b) { return b ? Math.round(a / b) : null; }
 
 function bosSatir(yol) {
-  return { yol, g: 0, e: 0, sk: 0, sn: 0, dk: 0, dt: 0, o: 0, ks: 0, fb: 0, b: [0, 0, 0, 0, 0, 0],
+  return { yol, g: 0, e: 0, sk: 0, sn: 0, dk: 0, dt: 0, o: 0, ks: 0, fb: 0, tb: 0, b: [0, 0, 0, 0, 0, 0],
            kay: Object.fromEntries(KAYNAK_TURLERI.map(k => [k, 0])), cih: Object.fromEntries(CIHAZLAR.map(k => [k, 0])) };
 }
 function satirEkle(hedef, kaynak) {
-  for (const k of ['g', 'e', 'sk', 'sn', 'dk', 'dt', 'o', 'ks', 'fb']) hedef[k] += kaynak[k] || 0;   // fb: forma dokunan (08.11)
+  // fb: forma dokunan (08.11), tb: telefona dokunan (İ4); eski günlerde alan yoksa 0
+  for (const k of ['g', 'e', 'sk', 'sn', 'dk', 'dt', 'o', 'ks', 'fb', 'tb']) hedef[k] += kaynak[k] || 0;
   (kaynak.b || []).forEach((n, i) => { hedef.b[i] += n || 0; });
   for (const k of KAYNAK_TURLERI) hedef.kay[k] += (kaynak.kay || {})[k] || 0;
   for (const k of CIHAZLAR) hedef.cih[k] += (kaynak.cih || {})[k] || 0;
@@ -92,6 +94,13 @@ function olustur(secenek) {
   let dakika = { bas: 0, n: 0 }, adresTemizlik = 0, sonTemizlik = '';
   const onbellek = new Map();                          // gün → {at, veri}
   fs.mkdirSync(kok, { recursive: true });
+  // Telefona dokunma ölçümü bu kodun sunucuda ilk çalıştığı gün başlar; tarih bir kez yazılır, sonra değişmez.
+  let olcumBaslangici = {};
+  try { olcumBaslangici = JSON.parse(fs.readFileSync(path.join(kok, OLCUM_DOSYASI), 'utf8')) || {}; } catch (e) {}
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(olcumBaslangici.telefon || ''))) {
+    olcumBaslangici = { ...olcumBaslangici, telefon: istanbulGunu(simdi()) };
+    try { fs.writeFileSync(path.join(kok, OLCUM_DOSYASI), JSON.stringify(olcumBaslangici), { mode: 0o600 }); } catch (e) {}
+  }
 
   const hamDosya = gun => path.join(kok, `olay-${gun}.jsonl`);
   const ozetDosya = gun => path.join(kok, `gun-${gun}.json`);
@@ -175,6 +184,13 @@ function olustur(secenek) {
       if (a) a.f = 1;
       return true;
     }
+    if (govde.t === 't') {   // İ4: sayfadaki telefon numarasına (tel: bağlantısı) basma; numara gelmez, açılış başına bir kez
+      const a = aktif.get(id);
+      if (a && a.tl) return false;
+      if (!yaz(gun, { t: 't', i: id })) return false;
+      if (a) a.tl = 1;
+      return true;
+    }
     if (govde.t === 's') {
       const s = tamSayi(govde.s, 0, 86400), d = tamSayi(govde.d, 0, 100);
       if (s === null) return false;
@@ -209,15 +225,17 @@ function olustur(secenek) {
       } catch (e) {}
     }
     const ziyaret = new Map();
-    const sureler = [], formlar = new Set();
+    const sureler = [], formlar = new Set(), telefonlar = new Set();
     for (const x of satirlar(gun)) {
       if (x.t === 'g' && !ziyaret.has(x.i)) ziyaret.set(x.i, { ...x, s: -1, d: -1 });
       else if (x.t === 's') sureler.push(x);
       else if (x.t === 'f') formlar.add(x.i);
+      else if (x.t === 't') telefonlar.add(x.i);
     }
     for (const x of satirlar(gunEkle(gun, 1))) {
       if (x.t === 's') sureler.push(x);
       else if (x.t === 'f') formlar.add(x.i);
+      else if (x.t === 't') telefonlar.add(x.i);
     }
     for (const x of sureler) {
       const v = ziyaret.get(x.i);
@@ -236,17 +254,19 @@ function olustur(secenek) {
         if (s < KISA_ESIGI) r.ks++;
       }
       if (v.d >= 0 && !v.a) { r.dk++; r.dt += v.d; if (v.d >= OKUMA_ESIGI) r.o++; }
-      const formaDokundu = formlar.has(v.i);
+      const formaDokundu = formlar.has(v.i), telefonaDokundu = telefonlar.has(v.i);
       if (formaDokundu) r.fb++;
+      if (telefonaDokundu) r.tb++;
       if (KAYNAK_TURLERI.includes(v.rt)) r.kay[v.rt]++;
       if (CIHAZLAR.includes(v.c)) r.cih[v.c]++;
       if (Number.isInteger(v.h) && v.h >= 0 && v.h < 24) veri.saat[v.h]++;
       if (v.e && v.r) veri.ref[v.r] = (veri.ref[v.r] || 0) + 1;
       if (v.k && (v.k.s || v.k.m || v.k.c)) {
         const anahtar = [v.k.s || '', v.k.m || '', v.k.c || ''].join('|');
-        const kp = veri.kamp[anahtar] || (veri.kamp[anahtar] = { g: 0, e: 0, sk: 0, sn: 0, fb: 0, yollar: {} });
+        const kp = veri.kamp[anahtar] || (veri.kamp[anahtar] = { g: 0, e: 0, sk: 0, sn: 0, fb: 0, tb: 0, yollar: {} });
         kp.g++; if (v.e) kp.e++;
         if (formaDokundu) kp.fb++;
+        if (telefonaDokundu) kp.tb = (kp.tb || 0) + 1;
         if (v.s >= 0) { kp.sk++; kp.sn += Math.min(SURE_SINIRI, v.s); }
         kp.yollar[v.p] = (kp.yollar[v.p] || 0) + 1;
       }
@@ -272,6 +292,7 @@ function olustur(secenek) {
       goruntulenme: r.g, giris: r.e, olculen: r.sk, ort_sure_sn: ortalama(r.sn, r.sk), toplam_sure_sn: r.sn,
       okuma_orani: oran(r.o, r.dk), ort_derinlik: ortalama(r.dt, r.dk), kisa_kalma_orani: oran(r.ks, r.sk), dagilim: r.b,
       form_baslatan: r.fb || 0, form_baslatma_orani: oran(r.fb || 0, r.g),
+      telefon_tiklayan: r.tb || 0, telefon_tiklama_orani: oran(r.tb || 0, r.g),
       kaynaklar: r.kay, cihaz: r.cih, son_7_gun: son7, onceki_7_gun: onceki7
     };
   }
@@ -298,8 +319,8 @@ function olustur(secenek) {
       }
       for (const [a, n] of Object.entries(g.ref)) ref[a] = (ref[a] || 0) + n;
       for (const [a, x] of Object.entries(g.kamp)) {
-        const k = kamp[a] || (kamp[a] = { g: 0, e: 0, sk: 0, sn: 0, fb: 0, yollar: {} });
-        k.g += x.g; k.e += x.e; k.sk += x.sk; k.sn += x.sn; k.fb += x.fb || 0;
+        const k = kamp[a] || (kamp[a] = { g: 0, e: 0, sk: 0, sn: 0, fb: 0, tb: 0, yollar: {} });
+        k.g += x.g; k.e += x.e; k.sk += x.sk; k.sn += x.sn; k.fb += x.fb || 0; k.tb += x.tb || 0;
         for (const [y, n] of Object.entries(x.yollar || {})) k.yollar[y] = (k.yollar[y] || 0) + n;
       }
       g.saat.forEach((n, i) => { saat[i] += n; });
@@ -311,11 +332,12 @@ function olustur(secenek) {
     const sonuc = {
       surum: 1, uretim: new Date(simdi()).toISOString(), zaman_dilimi: 'Europe/Istanbul',
       aralik: { bas: gunler[0], son: bugun, gun: gunSayisi }, sayac_baslangici: ilkGun(),
+      telefon_olcum_baslangici: olcumBaslangici.telefon || null,
       toplam: {
         goruntulenme: toplamSatir.g, giris: toplamSatir.e, olculen: toplamSatir.sk,
         ort_sure_sn: ortalama(toplamSatir.sn, toplamSatir.sk), toplam_sure_sn: toplamSatir.sn,
         okuma_orani: oran(toplamSatir.o, toplamSatir.dk), kisa_kalma_orani: oran(toplamSatir.ks, toplamSatir.sk),
-        form_baslatan: toplamSatir.fb, dagilim: toplamSatir.b, cihaz: toplamSatir.cih
+        form_baslatan: toplamSatir.fb, telefon_tiklayan: toplamSatir.tb, dagilim: toplamSatir.b, cihaz: toplamSatir.cih
       },
       onceki_donem: { bas: oncekiGunler[0], son: oncekiGunler[oncekiGunler.length - 1], goruntulenme: onceki.g, giris: onceki.e,
                       ort_sure_sn: ortalama(onceki.sn, onceki.sk) },
@@ -331,6 +353,7 @@ function olustur(secenek) {
       kampanyalar: Object.entries(kamp).sort((a, b) => b[1].g - a[1].g).slice(0, 40).map(([a, x]) => {
         const [kaynak, ortam, kampanya] = a.split('|');
         return { kaynak, ortam, kampanya, goruntulenme: x.g, giris: x.e, ort_sure_sn: ortalama(x.sn, x.sk), form_baslatan: x.fb,
+                 telefon_tiklayan: x.tb,
                  sayfalar: Object.entries(x.yollar).sort((p, q) => q[1] - p[1]).slice(0, 5).map(([yol, n]) => ({ yol, goruntulenme: n })) };
       }),
       saatler: saat,
@@ -341,6 +364,8 @@ function olustur(secenek) {
         'Benzersiz ziyaretçi sayılmaz (çerez ve kalıcı kimlik yok). "Giriş", siteye dışarıdan gelinen ilk sayfa görüntülemesidir.',
         'Okuma oranı, sayfanın en az %75\'ine kadar inilen görüntülemelerin payıdır; ekrana sığan kısa sayfalarda yüksek görünür. Bağlantıyla sayfa içindeki bir bölüme (#...) atlanan açılışlar 08.11.2026\'dan beri okuma oranına katılmaz.',
         'Forma dokunan: bir form alanına en az bir kez girilen görüntüleme (08.11.2026\'dan beri; yazılan içerik gelmez).',
+        'Telefona dokunan: sayfadaki telefon numarasına en az bir kez basılan görüntüleme (' + (olcumBaslangici.telefon || 'yeni') +
+          ' tarihinden beri; öncesi ölçülmedi). Aramanın yapıldığını göstermez; numara veya başka bilgi gelmez.',
         'Yönetici panelinde "sayma" işaretlenen tarayıcının ziyaretleri sayılmaz.'
       ]
     };
@@ -348,7 +373,7 @@ function olustur(secenek) {
       sonuc.gunler = gunluk.map(g => ({ gun: g.gun, goruntulenme: g.g, giris: g.e, saatler: g.saat, yonlendirenler: g.ref,
                                         kampanyalar: g.kamp, sayfalar: Object.values(g.sayfalar) }));
       sonuc.alanlar = { g: 'görüntülenme', e: 'giriş', sk: 'süresi ölçülen', sn: 'toplam süre (sn)', dk: 'derinliği ölçülen',
-                        dt: 'toplam derinlik (%)', o: 'okunan (%75+)', ks: 'kısa kalma (<10 sn)', fb: 'forma dokunan', b: 'süre dağılımı', kay: 'kaynak türü', cih: 'cihaz' };
+                        dt: 'toplam derinlik (%)', o: 'okunan (%75+)', ks: 'kısa kalma (<10 sn)', fb: 'forma dokunan', tb: 'telefona dokunan', b: 'süre dağılımı', kay: 'kaynak türü', cih: 'cihaz' };
     }
     return sonuc;
   }

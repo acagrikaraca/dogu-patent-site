@@ -94,7 +94,7 @@ dpKaynakYakala();
     // Reklam karşılama sayfası ana sayfa adresinden açılsa da ayrı sayılır (sayfa kendi yolunu meta etiketiyle verir).
     var yolEtiketi = document.querySelector('meta[name="dp-sayac-yol"]');
     var yol = ((yolEtiketi && yolEtiketi.getAttribute('content')) || window.location.pathname).slice(0, 200);
-    var gorunur = null, birikmis = 0, derinlik = 0, sonGonderilen = '', basladi = false, bekleyen = false, formBasladi = false;
+    var gorunur = null, birikmis = 0, derinlik = 0, sonGonderilen = '', basladi = false, bekleyen = false, formBasladi = false, telefonBasildi = false;
     function simdi() { return (window.performance && performance.now) ? performance.now() : Date.now(); }
     function sure() { return Math.round((birikmis + (gorunur === null ? 0 : simdi() - gorunur)) / 1000); }
     function olcDerinlik() {
@@ -161,6 +161,13 @@ dpKaynakYakala();
       formBasladi = true;
       gonder({ v: 1, t: 'f', i: id, p: yol });
     });
+    // Telefona dokunma: sayfadaki telefon numarasına (tel: bağlantısı) ilk basışta tek olay. Numara veya başka bilgi gönderilmez.
+    document.addEventListener('click', function (e) {
+      if (telefonBasildi || !basladi || !e.target || !e.target.closest) return;
+      if (!e.target.closest('a[href^="tel:"]')) return;
+      telefonBasildi = true;
+      gonder({ v: 1, t: 't', i: id, p: yol });
+    }, true);
     window.addEventListener('scroll', function () {
       if (bekleyen) return;
       bekleyen = true;

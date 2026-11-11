@@ -58,6 +58,9 @@
     .k-gonder { width: 100%; background: var(--primary); color: #fff; padding: 1.05rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.875rem; border: none; cursor: pointer; font-family: 'Inter', sans-serif; transition: background 0.2s; }
     .k-gonder:hover { background: var(--primary-container); }
     .k-gonder:disabled { opacity: 0.6; cursor: not-allowed; }
+    .k-form-tel { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.5rem; margin-top: 1rem; font-size: 0.9375rem; color: var(--on-surface); }
+    .k-form-tel .k-tel { font-size: 1rem; }
+    .k-form-kutu:has(.k-form[hidden]) .k-form-tel { display: none; }   /* teşekkür kutusu numarayı zaten gösterir */
     .k-son-not { font-size: 0.8125rem; color: var(--secondary); margin-top: 0.9rem; line-height: 1.5; }
     .k-basari { padding: 1rem 0 0.5rem; }
     .k-basari h3 { font-size: 1.15rem; color: var(--primary); font-weight: 800; margin-bottom: 0.5rem; }
@@ -139,6 +142,10 @@
         </div>
         <button type="submit" class="k-gonder">Ücretsiz ön araştırma iste</button>
       </form>
+      <!-- İ4: numara formun hemen altında, mobilde de tam görünür (üst şeritte dar ekranda yalnız simge kalır). -->
+      <p class="k-form-tel">Formu doldurmak yerine arayabilirsiniz:
+        <a href="tel:08502428525" class="k-tel"><span class="material-symbols-outlined" aria-hidden="true">call</span>0850 242 85 25</a>
+      </p>
       <div class="k-basari" id="k-basari" hidden>
         <h3>Talebiniz alındı</h3>
         <p>Uzmanımız ön araştırmayı yapıp sizi arayacak. Beklemek istemezseniz <a href="tel:08502428525">0850 242 85 25</a> numarasından da ulaşabilirsiniz.</p>

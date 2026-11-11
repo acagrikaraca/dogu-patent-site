@@ -73,6 +73,10 @@ test('Karşılama 09.11: başlık → tek cümle → form → açıklama sıras�
     assert.ok(giris > form && uzaktan > form, 'açıklama ve uzaktan çalışma satırı formun altında');
     assert.ok(html.indexOf(karsilama.SON_NOT) > form, 'ücretsizlik ve TÜRKPATENT notu kalır');
     assert.equal((html.match(/<input\b/g) || []).length, 6, 'form alanları değişmedi (5 alan + aydınlatma kutusu)');
+    // İ4: numara formun hemen altında tam yazılı ve tıklanabilir (dar ekranda üst şeritte yalnız simge kalır)
+    const telSatiri = html.indexOf('class="k-form-tel"');
+    assert.ok(telSatiri > html.indexOf('</form>') && telSatiri < html.indexOf('id="k-basari"'), 'telefon satırı formun hemen altında');
+    assert.match(html.slice(telSatiri, telSatiri + 400), /<a href="tel:08502428525"[^>]*>[\s\S]*0850 242 85 25<\/a>/);
     assert.ok(!/yüz yüze|ofisimiz|Erzurum/i.test(html));
   }
 });
@@ -110,11 +114,18 @@ test('Site: reklam adresi karşılamayı, düz adres ana sayfayı açar; e-posta
     const olcum = govde => fetch(s.url + '/api/olcum', { method: 'POST', headers: { 'Content-Type': 'text/plain', 'User-Agent': UA }, body: JSON.stringify(govde) });
     await olcum({ v: 1, t: 'g', i: 'aaaa1111bbbb2222', p: '/ucretsiz-marka-on-arastirma', r: 'm.facebook.com', k: { s: 'meta', m: 'paid_social', c: 'rek2_kobi_marka_tasarim' }, c: 'mobil' });
     await olcum({ v: 1, t: 'f', i: 'aaaa1111bbbb2222', p: '/ucretsiz-marka-on-arastirma' });
+    await olcum({ v: 1, t: 't', i: 'aaaa1111bbbb2222', p: '/ucretsiz-marka-on-arastirma' });   // İ4: telefona dokunma
     const o = await (await fetch(s.url + '/api/admin/sayac?gun=1', { headers: { 'x-admin-token': token } })).json();
     const k = o.sayfalar.find(x => x.yol === '/ucretsiz-marka-on-arastirma');
     assert.equal(k.baslik, 'Reklam karşılama: ücretsiz marka ön araştırması');
     assert.equal(k.form_baslatan, 1);
+    assert.equal(k.telefon_tiklayan, 1);
     assert.equal(o.kampanyalar[0].form_baslatan, 1);
+    assert.equal(o.kampanyalar[0].telefon_tiklayan, 1);
+    assert.match(o.telefon_olcum_baslangici, /^\d{4}-\d{2}-\d{2}$/);
+    const js = await (await fetch(s.url + '/js/main.js')).text();
+    assert.match(js, /a\[href\^="tel:"\]/, 'site betiği tel: bağlantısına basışı sayar');
+    assert.match(js, /t: 't', i: id, p: yol \}/, 'olay numarayı taşımaz');
   } finally { await s.dur(); }
 });
 
