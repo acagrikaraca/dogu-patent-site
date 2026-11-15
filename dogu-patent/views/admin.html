@@ -311,7 +311,7 @@ async function loadOyun(){
     if(!d.olcumBaslangici){c.innerHTML=simdi+'<div class="empty-state"><span class="material-symbols-outlined">sports_esports</span><p>Henüz kayıtlı oyun ziyareti yok. Sayaç ilk ziyaretlerle dolacak.</p></div>';return}
     const donemler=[['Bugün',d.bugun],['Dün',d.dun],['Son 7 gün',d.son7],['Son 30 gün',d.son30],['Toplam',d.toplam]];
     const kutu=([ad,p])=>{if(!p||!p.olculdu)return '<div class="sy-kutu oy-kutu"><span>'+ad+'</span><b>—</b><small>Ölçülmedi (sayaç '+syEsc(d.olcumBaslangici)+' tarihinde başladı)</small></div>';
-      return '<div class="sy-kutu oy-kutu"><span>'+ad+'</span><b>'+syN(p.kisi)+' kişi</b><small>'+syN(p.ziyaret)+' ziyaret'+(p.sayilamayan?' · '+syN(p.sayilamayan)+' sayılamayan':'')+'<br>Geri gelen: '+syN(p.geriGelen)+' ziyaret<br>'+syN(p.oynayan)+' ziyarette oynandı<br>Ort. oynama: '+oySure(p.oynamaSn.ortalama)+'<br>Toplam oynama: '+oySure(p.oynamaSn.toplam)+'</small></div>'};
+      return '<div class="sy-kutu oy-kutu"><span>'+ad+'</span><b>'+syN(p.kisi)+' kişi</b><small>'+syN(p.ziyaret)+' ziyaret'+(p.sayilamayan?' · '+syN(p.sayilamayan)+' sayılamayan':'')+'<br>Geri gelen: '+syN(p.geriGelen)+' ziyaret<br>Mobilden gelen: '+syN(((p.cihaz||{}).mobil||0)+((p.cihaz||{}).tablet||0))+' ziyaret<br>'+syN(p.oynayan)+' ziyarette oynandı<br>Ort. oynama: '+oySure(p.oynamaSn.ortalama)+'<br>Toplam oynama: '+oySure(p.oynamaSn.toplam)+'</small></div>'};
     const kk=d.kacKere||{};
     const kacKere=[['1 kez',kk.bir],['2 kez',kk.iki],['3 kez',kk.uc],['4–5 kez',kk.dortBes],['6–10 kez',kk.altiOn],['10 kezden fazla',kk.ondanFazla]];
     const t=d.toplam||{},dag=(d.sureDagilimi||[]).map(x=>[x.ad,x.ziyaret]);

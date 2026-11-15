@@ -379,6 +379,7 @@ function olustur(secenek) {
         'Sayılamayan: tarayıcı kayıt tutmaya izin vermediği için kaçıncı ziyaret olduğu bilinmeyen ziyaret; kişi sayısına katılmaz.',
         'Oynayan: başlangıç noktası seçilip en az 10 saniye oynanan ziyaret. Ortalama ve medyan oynama süresi yalnız oynayan ziyaretlerden hesaplanır; toplam oynama bütün ziyaretlerin toplamıdır.',
         'Sayfa süresi, oyun sayfasının ekranda açık (görünür) kaldığı süredir. Tek ziyarette en çok 4 saat sayılır.',
+        'Mobilden gelen: telefon veya tabletle açılan ziyaret. Oyun bu cihazlarda açılmaz, yalnız "mobil sürüm yok" bilgisi gösterilir; bu ziyaretler sayılır ama süreleri sıfırdır ve "şu an oyunda" görünmezler.',
         'Şu an oyunda: son 60 saniye içinde oyundan haber gelen açık sekme.',
         '"Kaç kere geldi" tablosu bütün ölçüm süresi içindir; her ziyaretin kaçıncı ziyaret olduğundan hesaplanır.',
         'Çerez, IP adresi veya kalıcı kimlik kullanılmaz; botlar sayılmaz.'
