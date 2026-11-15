@@ -8,6 +8,7 @@ const multer = require('multer');
 const nodemailer = require('nodemailer');
 const blogSeo = require('./blog-seo');
 const sayacModulu = require('./sayac');
+const oyunSayacModulu = require('./oyun-sayac');
 const karsilama = require('./karsilama');
 
 const app = express();
@@ -189,6 +190,8 @@ app.use(express.static(PUBLIC_ROOT));
 app.set('views', VIEWS_ROOT);
 
 const sayac = sayacModulu.olustur({ kok: path.join(STORAGE_ROOT, 'sayac'), yolCoz: sayacYolu });
+// Oyun sayacı (oyun.dogupatent.com) site sayacından ayrı klasörde tutulur. OYUN_SAYAC_KAYNAKLARI yalnız yerel deneme için kaynak ekler.
+const oyunSayac = oyunSayacModulu.olustur({ kok: path.join(STORAGE_ROOT, 'oyun-sayac'), ekKaynaklar: process.env.OYUN_SAYAC_KAYNAKLARI });
 const BLOG_DB = dataFile('blog.json');
 const MARKA_ARASTIRMA_DB = dataFile('marka-arastirma.json');
 const ILETISIM_DB = dataFile('iletisim.json');
@@ -522,6 +525,29 @@ app.get('/api/admin/sayac', adminAuth, (req, res) => {
   // Ajan sistemindeki n8n, Türkçe UTF-8 yanıtı başka kodlama sanabiliyor; JSON yalnız ASCII kaçışla gönderilir (anlam aynı).
   const metin = JSON.stringify(veri).replace(/[\u007f-￿]/g, c => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'));
   res.set('Cache-Control', 'no-store').type('application/json').send(metin);
+});
+
+// ===== Oyun sayacı uçları (oyun.dogupatent.com) =====
+// Oyun sayfası navigator.sendBeacon ile text/plain JSON gönderir; yanıt okunmaz. Her durumda boş 204 (reddin nedeni söylenmez).
+const oyunGovdesi = express.text({ type: () => true, limit: '512b' });
+app.post('/api/oyun-sayac', (req, res) => {
+  oyunGovdesi(req, res, hata => {
+    const kaynak = String(req.headers.origin || '').toLowerCase();
+    if (!hata) {
+      let govde = req.body;
+      if (typeof govde === 'string') { try { govde = JSON.parse(govde); } catch (e) { govde = null; } }
+      try {
+        oyunSayac.olay(govde, { kaynak, ua: req.headers['user-agent'], adres: req.headers['x-forwarded-for'] || req.socket.remoteAddress });
+      } catch (e) {
+        console.error('[OYUN SAYAC] olay işlenemedi:', e.message);
+      }
+    }
+    if (oyunSayac.kaynaklar.has(kaynak)) res.set({ 'Access-Control-Allow-Origin': kaynak, Vary: 'Origin' });
+    res.set('Cache-Control', 'no-store').status(204).end();
+  });
+});
+app.get('/api/admin/oyun-sayac', adminAuth, (req, res) => {
+  res.set('Cache-Control', 'no-store').json(oyunSayac.ozet());
 });
 
 app.use((req, res) => { res.status(404).sendFile(path.join(VIEWS_ROOT, 'index.html')); });

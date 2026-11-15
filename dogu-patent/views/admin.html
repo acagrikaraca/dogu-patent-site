@@ -95,6 +95,11 @@
     .sy-sayma{display:flex;gap:.5rem;align-items:center;font-size:.8125rem;margin-top:1.5rem;padding-top:1rem;border-top:1px solid #eee;cursor:pointer}
     .sy-notlar{font-size:.6875rem;color:var(--secondary);margin-top:1rem;padding-left:1rem;line-height:1.6}
     .sy-kaydir{overflow-x:auto}
+    /* Oyun (oyun.dogupatent.com sayacı) */
+    .oy-simdi{display:flex;align-items:baseline;gap:.75rem;border:1px solid #eee;background:#fafbfc;padding:1rem 1.25rem;margin-bottom:1.5rem}
+    .oy-simdi span{font-size:.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--secondary)}
+    .oy-simdi b{font-size:2rem;color:var(--primary);font-variant-numeric:tabular-nums}.oy-simdi small{font-size:.6875rem;color:var(--secondary);margin-left:auto}
+    .oy-kutu small{display:block;line-height:1.6}
     @media(max-width:900px){.sy-kutular{grid-template-columns:repeat(2,1fr)}.sy-iki{grid-template-columns:1fr}}
     @media(max-width:768px){.form-grid{grid-template-columns:1fr}.form-group.full{grid-column:span 1}.post-item{flex-wrap:wrap}}
   </style>
@@ -131,6 +136,7 @@
       <div class="tab" data-tab="basvurular">Marka Basvurulari</div>
       <div class="tab" data-tab="mesajlar">Iletisim Mesajlari</div>
       <div class="tab" data-tab="ziyaretler">Ziyaretler</div>
+      <div class="tab" data-tab="oyun">Oyun</div>
     </div>
     <div class="tab-content active" id="tab-blog">
       <div class="card"><div class="card-header"><h2>Blog Yazilari</h2><button class="btn btn-primary" onclick="switchTab('yeni')">+ Yeni Yazi</button></div><div id="blogList"><div class="empty-state"><span class="material-symbols-outlined">hourglass_top</span><p>Yukleniyor...</p></div></div></div>
@@ -162,6 +168,13 @@
         <p class="sy-not">Bu sayılar yalnız bu panelde ve şirketin ajan sisteminde görünür; ziyaretçiler göremez. Çerez veya kişisel veri kullanılmaz. Süre, sayfanın ekranda açık kaldığı süredir.</p>
         <div id="syIcerik"><div class="empty-state"><span class="material-symbols-outlined">hourglass_top</span><p>Yükleniyor...</p></div></div>
         <label class="sy-sayma"><input type="checkbox" id="saymaKutusu"/> Bu tarayıcıdan yaptığım ziyaretleri sayma (kendi bilgisayarınızda ve telefonunuzda bir kez işaretleyin)</label>
+      </div>
+    </div>
+    <div class="tab-content" id="tab-oyun">
+      <div class="card">
+        <div class="card-header"><h2>Oyun ziyaretleri</h2><span class="sy-not" style="margin:0">oyun.dogupatent.com</span></div>
+        <p class="sy-not">Bu sayılar yalnız bu panelde görünür; oyuncular göremez. Çerez veya kişisel veri kullanılmaz. Kişi, oyunu o tarayıcıda ilk kez açan cihazdır.</p>
+        <div id="oyIcerik"><div class="empty-state"><span class="material-symbols-outlined">hourglass_top</span><p>Yükleniyor...</p></div></div>
       </div>
     </div>
     <div class="tab-content" id="tab-mesajlar"><div class="card"><div class="card-header"><h2>Iletisim Mesajlari</h2></div><div id="mesajList"></div></div></div>
@@ -218,7 +231,7 @@ document.getElementById('loginForm').addEventListener('submit',async(e)=>{
 
 // ===== TABS =====
 document.querySelectorAll('.tab').forEach(tab=>{tab.addEventListener('click',()=>switchTab(tab.dataset.tab))});
-function switchTab(name){document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));document.querySelectorAll('.tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab-'+name));if(name==='blog')loadBlogList();if(name==='basvurular')loadBasvurular();if(name==='mesajlar')loadMesajlar();if(name==='ziyaretler')loadZiyaretler()}
+function switchTab(name){document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));document.querySelectorAll('.tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab-'+name));if(name==='blog')loadBlogList();if(name==='basvurular')loadBasvurular();if(name==='mesajlar')loadMesajlar();if(name==='ziyaretler')loadZiyaretler();oyZamanla(name==='oyun')}
 
 // ===== TOAST =====
 function showToast(msg,type='success'){let t=document.querySelector('.toast');if(!t){t=document.createElement('div');t.className='toast';document.body.appendChild(t)}t.textContent=msg;t.className='toast '+type;requestAnimationFrame(()=>t.classList.add('show'));setTimeout(()=>t.classList.remove('show'),3500)}
@@ -278,6 +291,42 @@ async function loadZiyaretler(){
       +(kamp?'<div class="sy-baslik">Kampanya ve paylaşım bağlantıları (UTM)</div><div class="sy-kaydir"><table class="sy-tablo"><thead><tr><th>Kampanya</th><th class="n">Görüntülenme</th><th class="n">Giriş</th><th class="n">Ort. süre</th><th class="n">Forma dokunan</th><th class="n">Telefona dokunan</th><th>Açılan sayfa</th></tr></thead><tbody>'+kamp+'</tbody></table></div>':'')
       +'<ul class="sy-notlar">'+(d.notlar||[]).map(n=>'<li>'+syEsc(n)+'</li>').join('')+(d.sayac_baslangici?'<li>Sayaç başlangıcı: '+syEsc(d.sayac_baslangici)+'</li>':'')+'</ul>';
   }catch(e){c.innerHTML='<div class="empty-state"><span class="material-symbols-outlined">error</span><p>Ziyaret bilgisi yüklenemedi.</p></div>'}
+}
+
+// ===== OYUN (oyun.dogupatent.com sayaci) =====
+let oyZamanlayici=null;
+const OY_KAYNAK=Object.assign({},SY_KAYNAK,{site:'Doğu Patent sitesi'});
+function oySure(s){if(s==null)return '—';s=Math.round(s);if(s<60)return s+' sn';if(s<3600){const d=Math.floor(s/60),k=s%60;return d+' dk'+(k?' '+k+' sn':'')}const sa=Math.floor(s/3600),d=Math.floor(s%3600/60);return sa+' sa'+(d?' '+d+' dk':'')}
+function oyKacinci(z){return z?syN(z)+'. ziyaret':'bilinmiyor'}
+function oySaat(iso){return new Date(iso).toLocaleString('tr-TR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}
+function oyZamanla(acik){clearInterval(oyZamanlayici);oyZamanlayici=null;if(!acik)return;loadOyun();oyZamanlayici=setInterval(()=>{if(!document.hidden&&document.getElementById('tab-oyun').classList.contains('active'))loadOyun()},15000)}
+async function loadOyun(){
+  const c=document.getElementById('oyIcerik');
+  try{
+    const r=await authFetch('/api/admin/oyun-sayac');
+    if(!r.ok)throw new Error('http '+r.status);
+    const d=await r.json(),sm=d.simdi||{sayi:0,ziyaretler:[]};
+    const simdi='<div class="oy-simdi"><span>Şu an oyunda</span><b>'+syN(sm.sayi)+'</b><small>15 saniyede bir yenilenir · '+syEsc(new Date(d.uretim).toLocaleTimeString('tr-TR'))+'</small></div>'
+      +(sm.ziyaretler.length?'<div class="sy-kaydir"><table class="sy-tablo"><thead><tr><th>Açılış</th><th class="n">Sayfada</th><th class="n">Oynuyor</th><th>Kaçıncı ziyaret</th><th>Cihaz</th></tr></thead><tbody>'+sm.ziyaretler.map(v=>'<tr><td>'+syEsc(oySaat(v.baslangic))+'</td><td class="n">'+oySure(v.sayfaSn)+'</td><td class="n">'+oySure(v.oynamaSn)+'</td><td>'+oyKacinci(v.kacinci)+'</td><td>'+syEsc(SY_CIHAZ[v.cihaz]||v.cihaz)+'</td></tr>').join('')+'</tbody></table></div>':'');
+    if(!d.olcumBaslangici){c.innerHTML=simdi+'<div class="empty-state"><span class="material-symbols-outlined">sports_esports</span><p>Henüz kayıtlı oyun ziyareti yok. Sayaç ilk ziyaretlerle dolacak.</p></div>';return}
+    const donemler=[['Bugün',d.bugun],['Dün',d.dun],['Son 7 gün',d.son7],['Son 30 gün',d.son30],['Toplam',d.toplam]];
+    const kutu=([ad,p])=>{if(!p||!p.olculdu)return '<div class="sy-kutu oy-kutu"><span>'+ad+'</span><b>—</b><small>Ölçülmedi (sayaç '+syEsc(d.olcumBaslangici)+' tarihinde başladı)</small></div>';
+      return '<div class="sy-kutu oy-kutu"><span>'+ad+'</span><b>'+syN(p.kisi)+' kişi</b><small>'+syN(p.ziyaret)+' ziyaret'+(p.sayilamayan?' · '+syN(p.sayilamayan)+' sayılamayan':'')+'<br>Geri gelen: '+syN(p.geriGelen)+' ziyaret<br>'+syN(p.oynayan)+' ziyarette oynandı<br>Ort. oynama: '+oySure(p.oynamaSn.ortalama)+'<br>Toplam oynama: '+oySure(p.oynamaSn.toplam)+'</small></div>'};
+    const kk=d.kacKere||{};
+    const kacKere=[['1 kez',kk.bir],['2 kez',kk.iki],['3 kez',kk.uc],['4–5 kez',kk.dortBes],['6–10 kez',kk.altiOn],['10 kezden fazla',kk.ondanFazla]];
+    const t=d.toplam||{},dag=(d.sureDagilimi||[]).map(x=>[x.ad,x.ziyaret]);
+    const ozet='<table class="sy-tablo"><thead><tr><th>Dönem</th><th class="n">Ort. oynama</th><th class="n">Medyan oynama</th><th class="n">En uzun oynama</th><th class="n">Ort. sayfada</th><th class="n">Toplam sayfada</th></tr></thead><tbody>'+donemler.map(([ad,p])=>'<tr><td>'+ad+'</td>'+(p&&p.olculdu?'<td class="n">'+oySure(p.oynamaSn.ortalama)+'</td><td class="n">'+oySure(p.oynamaSn.medyan)+(p.medyanYaklasik?' <small>yaklaşık</small>':'')+'</td><td class="n">'+oySure(p.oynamaSn.enUzun)+'</td><td class="n">'+oySure(p.sayfaSn.ortalama)+'</td><td class="n">'+oySure(p.sayfaSn.toplam)+'</td>':'<td class="n" colspan="5">ölçülmedi</td>')+'</tr>').join('')+'</tbody></table>';
+    const gunler=(d.gunler||[]).slice().reverse().map(g=>'<tr><td>'+syEsc(new Date(g.gun+'T12:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',weekday:'short'}))+'</td>'+(g.olculdu?'<td class="n">'+syN(g.ziyaret)+'</td><td class="n">'+syN(g.yeniKisi)+'</td><td class="n">'+syN(g.geriGelen)+'</td><td class="n">'+syN(g.oynayan)+'</td><td class="n">'+oySure(g.ortOynamaSn)+'</td><td class="n">'+oySure(g.toplamOynamaSn)+'</td>':'<td class="n" colspan="6">ölçülmedi</td>')+'</tr>').join('');
+    const son=(d.sonZiyaretler||[]).map(v=>'<tr><td>'+syEsc(oySaat(v.baslangic))+(v.oyunda?'<small>şu an oyunda</small>':'')+'</td><td class="n">'+oySure(v.sayfaSn)+'</td><td class="n">'+oySure(v.oynamaSn)+'</td><td>'+oyKacinci(v.kacinci)+'</td><td>'+syEsc(SY_CIHAZ[v.cihaz]||v.cihaz)+'</td><td>'+syEsc(OY_KAYNAK[v.kaynak]||v.kaynak||'—')+(v.alan?'<small>'+syEsc(v.alan)+'</small>':'')+'</td></tr>').join('');
+    c.innerHTML=simdi
+      +'<div class="sy-kutular">'+donemler.map(kutu).join('')+'</div>'
+      +'<div class="sy-baslik">Ne kadar oynadılar?</div><div class="sy-kaydir">'+ozet+'</div>'
+      +'<div class="sy-iki"><div><div class="sy-baslik">Kaç kişi kaç kere geldi? (bütün dönem)</div>'+syCubuklar(kacKere.map(([a,n])=>[a,n||0]))+(kk.sayilamayan?'<p class="sy-not">Ayrıca kaçıncı ziyaret olduğu bilinmeyen '+syN(kk.sayilamayan)+' ziyaret var.</p>':'')+'</div>'
+      +'<div><div class="sy-baslik">Oynama süresi dağılımı (bütün dönem)</div>'+syCubuklar(dag)+'<p class="sy-not">Oyuna hiç başlamayan '+syN(t.oynamayan||0)+' ziyaret bu dağılıma katılmaz.</p></div></div>'
+      +'<div class="sy-baslik">Son 30 gün</div><div class="sy-kaydir"><table class="sy-tablo"><thead><tr><th>Gün</th><th class="n">Ziyaret</th><th class="n">Yeni kişi</th><th class="n">Geri gelen</th><th class="n">Oynayan</th><th class="n">Ort. oynama</th><th class="n">Toplam oynama</th></tr></thead><tbody>'+gunler+'</tbody></table></div>'
+      +'<div class="sy-baslik">Son ziyaretler</div>'+(son?'<div class="sy-kaydir"><table class="sy-tablo"><thead><tr><th>Açılış</th><th class="n">Sayfada</th><th class="n">Oynadı</th><th>Kaçıncı ziyaret</th><th>Cihaz</th><th>Nereden</th></tr></thead><tbody>'+son+'</tbody></table></div>':'<p class="sy-not">Kayıt yok.</p>')
+      +'<ul class="sy-notlar">'+(d.notlar||[]).map(n=>'<li>'+syEsc(n)+'</li>').join('')+'<li>Sayaç başlangıcı: '+syEsc(d.olcumBaslangici)+'</li></ul>';
+  }catch(e){c.innerHTML='<div class="empty-state"><span class="material-symbols-outlined">error</span><p>Oyun bilgisi yüklenemedi.</p></div>'}
 }
 
 // Init
