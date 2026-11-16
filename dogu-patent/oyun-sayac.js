@@ -332,7 +332,8 @@ function olustur(secenek) {
     liste.sort((a, b) => a.b - b.b);
     return {
       sayi: liste.length,
-      ziyaretler: liste.slice(0, 30).map(v => ({ baslangic: new Date(v.b).toISOString(), sayfaSn: v.s, oynamaSn: v.y, kacinci: v.z || null, cihaz: v.c })),
+      ziyaretler: liste.slice(0, 30).map(v => ({ baslangic: new Date(v.b).toISOString(), sayfaSn: v.s, oynamaSn: v.y, kacinci: v.z || null, cihaz: v.c,
+                                               kaynak: v.rt, alan: v.r || null })),
       pencereSn: SIMDI_PENCERESI / 1000
     };
   }

@@ -299,6 +299,7 @@ const OY_KAYNAK=Object.assign({},SY_KAYNAK,{site:'Doğu Patent sitesi'});
 function oySure(s){if(s==null)return '—';s=Math.round(s);if(s<60)return s+' sn';if(s<3600){const d=Math.floor(s/60),k=s%60;return d+' dk'+(k?' '+k+' sn':'')}const sa=Math.floor(s/3600),d=Math.floor(s%3600/60);return sa+' sa'+(d?' '+d+' dk':'')}
 function oyKacinci(z){return z?syN(z)+'. ziyaret':'bilinmiyor'}
 function oySaat(iso){return new Date(iso).toLocaleString('tr-TR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}
+function oySatir(v){return '<tr><td>'+syEsc(oySaat(v.baslangic))+(v.oyunda?'<small>şu an oyunda</small>':'')+'</td><td class="n">'+oySure(v.sayfaSn)+'</td><td class="n">'+oySure(v.oynamaSn)+'</td><td>'+oyKacinci(v.kacinci)+'</td><td>'+syEsc(SY_CIHAZ[v.cihaz]||v.cihaz)+'</td><td>'+syEsc(OY_KAYNAK[v.kaynak]||v.kaynak||'—')+(v.alan?'<small>'+syEsc(v.alan)+'</small>':'')+'</td></tr>'}
 function oyZamanla(acik){clearInterval(oyZamanlayici);oyZamanlayici=null;if(!acik)return;loadOyun();oyZamanlayici=setInterval(()=>{if(!document.hidden&&document.getElementById('tab-oyun').classList.contains('active'))loadOyun()},15000)}
 async function loadOyun(){
   const c=document.getElementById('oyIcerik');
@@ -306,9 +307,11 @@ async function loadOyun(){
     const r=await authFetch('/api/admin/oyun-sayac');
     if(!r.ok)throw new Error('http '+r.status);
     const d=await r.json(),sm=d.simdi||{sayi:0,ziyaretler:[]};
-    const simdi='<div class="oy-simdi"><span>Şu an oyunda</span><b>'+syN(sm.sayi)+'</b><small>15 saniyede bir yenilenir · '+syEsc(new Date(d.uretim).toLocaleTimeString('tr-TR'))+'</small></div>'
-      +(sm.ziyaretler.length?'<div class="sy-kaydir"><table class="sy-tablo"><thead><tr><th>Açılış</th><th class="n">Sayfada</th><th class="n">Oynuyor</th><th>Kaçıncı ziyaret</th><th>Cihaz</th></tr></thead><tbody>'+sm.ziyaretler.map(v=>'<tr><td>'+syEsc(oySaat(v.baslangic))+'</td><td class="n">'+oySure(v.sayfaSn)+'</td><td class="n">'+oySure(v.oynamaSn)+'</td><td>'+oyKacinci(v.kacinci)+'</td><td>'+syEsc(SY_CIHAZ[v.cihaz]||v.cihaz)+'</td></tr>').join('')+'</tbody></table></div>':'');
-    if(!d.olcumBaslangici){c.innerHTML=simdi+'<div class="empty-state"><span class="material-symbols-outlined">sports_esports</span><p>Henüz kayıtlı oyun ziyareti yok. Sayaç ilk ziyaretlerle dolacak.</p></div>';return}
+    const simdi='<div class="oy-simdi"><span>Şu an oyunda</span><b>'+syN(sm.sayi)+'</b><small>15 saniyede bir yenilenir · '+syEsc(new Date(d.uretim).toLocaleTimeString('tr-TR'))+'</small></div>';
+    // Şu an oyunda olan masaüstü ziyaretler: son ziyaretler tablosunun sütunlarıyla, "Ne kadar oynadılar?" başlığının üstünde
+    const oyunda=(sm.ziyaretler||[]).filter(v=>v.cihaz==='masaustu');
+    const simdiTablo='<div class="sy-baslik">Şu an oyunda olanlar (masaüstü)</div>'+(oyunda.length?'<div class="sy-kaydir"><table class="sy-tablo"><thead><tr><th>Açılış</th><th class="n">Sayfada</th><th class="n">Oynuyor</th><th>Kaçıncı ziyaret</th><th>Cihaz</th><th>Nereden</th></tr></thead><tbody>'+oyunda.map(oySatir).join('')+'</tbody></table></div>':'<p class="sy-not">Şu an masaüstünde oynayan yok.</p>');
+    if(!d.olcumBaslangici){c.innerHTML=simdi+simdiTablo+'<div class="empty-state"><span class="material-symbols-outlined">sports_esports</span><p>Henüz kayıtlı oyun ziyareti yok. Sayaç ilk ziyaretlerle dolacak.</p></div>';return}
     const donemler=[['Bugün',d.bugun],['Dün',d.dun],['Son 7 gün',d.son7],['Son 30 gün',d.son30],['Toplam',d.toplam]];
     const kutu=([ad,p])=>{if(!p||!p.olculdu)return '<div class="sy-kutu oy-kutu"><span>'+ad+'</span><b>—</b><small>Ölçülmedi (sayaç '+syEsc(d.olcumBaslangici)+' tarihinde başladı)</small></div>';
       return '<div class="sy-kutu oy-kutu"><span>'+ad+'</span><b>'+syN(p.kisi)+' kişi</b><small>'+syN(p.ziyaret)+' ziyaret'+(p.sayilamayan?' · '+syN(p.sayilamayan)+' sayılamayan':'')+'<br>Geri gelen: '+syN(p.geriGelen)+' ziyaret<br>Mobilden gelen: '+syN(((p.cihaz||{}).mobil||0)+((p.cihaz||{}).tablet||0))+' ziyaret<br>'+syN(p.oynayan)+' ziyarette oynandı<br>Ort. oynama: '+oySure(p.oynamaSn.ortalama)+'<br>Toplam oynama: '+oySure(p.oynamaSn.toplam)+'</small></div>'};
@@ -317,9 +320,10 @@ async function loadOyun(){
     const t=d.toplam||{},dag=(d.sureDagilimi||[]).map(x=>[x.ad,x.ziyaret]);
     const ozet='<table class="sy-tablo"><thead><tr><th>Dönem</th><th class="n">Ort. oynama</th><th class="n">Medyan oynama</th><th class="n">En uzun oynama</th><th class="n">Ort. sayfada</th><th class="n">Toplam sayfada</th></tr></thead><tbody>'+donemler.map(([ad,p])=>'<tr><td>'+ad+'</td>'+(p&&p.olculdu?'<td class="n">'+oySure(p.oynamaSn.ortalama)+'</td><td class="n">'+oySure(p.oynamaSn.medyan)+(p.medyanYaklasik?' <small>yaklaşık</small>':'')+'</td><td class="n">'+oySure(p.oynamaSn.enUzun)+'</td><td class="n">'+oySure(p.sayfaSn.ortalama)+'</td><td class="n">'+oySure(p.sayfaSn.toplam)+'</td>':'<td class="n" colspan="5">ölçülmedi</td>')+'</tr>').join('')+'</tbody></table>';
     const gunler=(d.gunler||[]).slice().reverse().map(g=>'<tr><td>'+syEsc(new Date(g.gun+'T12:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',weekday:'short'}))+'</td>'+(g.olculdu?'<td class="n">'+syN(g.ziyaret)+'</td><td class="n">'+syN(g.yeniKisi)+'</td><td class="n">'+syN(g.geriGelen)+'</td><td class="n">'+syN(g.oynayan)+'</td><td class="n">'+oySure(g.ortOynamaSn)+'</td><td class="n">'+oySure(g.toplamOynamaSn)+'</td>':'<td class="n" colspan="6">ölçülmedi</td>')+'</tr>').join('');
-    const son=(d.sonZiyaretler||[]).map(v=>'<tr><td>'+syEsc(oySaat(v.baslangic))+(v.oyunda?'<small>şu an oyunda</small>':'')+'</td><td class="n">'+oySure(v.sayfaSn)+'</td><td class="n">'+oySure(v.oynamaSn)+'</td><td>'+oyKacinci(v.kacinci)+'</td><td>'+syEsc(SY_CIHAZ[v.cihaz]||v.cihaz)+'</td><td>'+syEsc(OY_KAYNAK[v.kaynak]||v.kaynak||'—')+(v.alan?'<small>'+syEsc(v.alan)+'</small>':'')+'</td></tr>').join('');
+    const son=(d.sonZiyaretler||[]).map(oySatir).join('');
     c.innerHTML=simdi
       +'<div class="sy-kutular">'+donemler.map(kutu).join('')+'</div>'
+      +simdiTablo
       +'<div class="sy-baslik">Ne kadar oynadılar?</div><div class="sy-kaydir">'+ozet+'</div>'
       +'<div class="sy-iki"><div><div class="sy-baslik">Kaç kişi kaç kere geldi? (bütün dönem)</div>'+syCubuklar(kacKere.map(([a,n])=>[a,n||0]))+(kk.sayilamayan?'<p class="sy-not">Ayrıca kaçıncı ziyaret olduğu bilinmeyen '+syN(kk.sayilamayan)+' ziyaret var.</p>':'')+'</div>'
       +'<div><div class="sy-baslik">Oynama süresi dağılımı (bütün dönem)</div>'+syCubuklar(dag)+'<p class="sy-not">Oyuna hiç başlamayan '+syN(t.oynamayan||0)+' ziyaret bu dağılıma katılmaz.</p></div></div>'
