@@ -27,7 +27,7 @@ const ileri = (k, sn) => { k.saat.t += sn * 1000; };
 
 test('Oyun: girdi temizliği — bozuk, eksik veya fazla değer kabul edilmez; sınırlar uygulanır', () => {
   const coz = oyunSayac.olayCoz;
-  assert.deepEqual(coz({ k: 'abcdef0123456789', o: 'a', z: 1, s: 0, y: 0, r: 'www.Google.com' }), { k: 'abcdef0123456789', o: 'a', z: 1, s: 0, y: 0, r: 'google.com' });
+  assert.deepEqual(coz({ k: 'abcdef0123456789', o: 'a', z: 1, s: 0, y: 0, r: 'www.Google.com' }), { k: 'abcdef0123456789', o: 'a', z: 1, s: 0, y: 0, r: 'google.com', p: '' });
   assert.equal(coz({ k: 'ABCDEF0123456789', o: 'a', z: 1, s: 0, y: 0 }), null, 'büyük harf kimlik');
   assert.equal(coz({ k: 'abcdef012345678', o: 'a', z: 1, s: 0, y: 0 }), null, '15 karakter');
   assert.equal(coz({ k: 'abcdef0123456789', o: 'x', z: 1, s: 0, y: 0 }), null, 'bilinmeyen olay');
@@ -308,4 +308,73 @@ test('Site sayacı: oyun sayacı eklenince çıktısı değişmez (aynı olaylar
     assert.equal(s.olay({ k: 'aaaaaaaaaaaaaaab', o: 'a', z: 1, s: 0, y: 0 }, { ua: UA }), false, 'oyun olayı site sayacına girmez');
     assert.deepEqual(readdirSync(path.join(kok, 'sayac')).sort(), ['olay-2026-11-15.jsonl', 'olcum-baslangic.json']);
   } finally { rmSync(kok, { recursive: true, force: true }); }
+});
+
+test('Oyun: oyuncular tablosu — oyuncu numarasıyla günlük, aylık ve tüm zamanlar; üç sıralama; eski günler diskten', () => {
+  const k = kur('2026-11-18T09:00:00Z');
+  try {
+    const P1 = 'aaaa000000000001', P2 = 'bbbb000000000002', P3 = 'cccc000000000003';
+    const ziyaret = (s, kim, p, y, sayfa = y + 30) => {
+      gonder(s, { k: kim, o: 'a', z: 1, s: 0, y: 0, p });
+      gonder(s, { k: kim, o: 'n', z: 1, s: sayfa, y, p });
+      gonder(s, { k: kim, o: 'b', z: 1, s: sayfa, y, p });
+    };
+    // 18 Kasım: P1 tek uzun ziyaret (2 sa), P2 üç kısa ziyaret (3 × 20 dk), P3 bir ziyaret 10 dk, bir de numarasız eski oyun
+    ziyaret(k.sayac, kim(1), P1, 7200);
+    ziyaret(k.sayac, kim(2), P2, 1200); ziyaret(k.sayac, kim(3), P2, 1200); ziyaret(k.sayac, kim(4), P2, 1200);
+    ziyaret(k.sayac, kim(5), P3, 600);
+    gonder(k.sayac, { k: kim(6), o: 'a', z: 4, s: 0, y: 0 });
+    const gun = k.sayac.oyuncular('gun', '2026-11-18', 'toplam');
+    assert.equal(gun.oyuncuSayisi, 3);
+    assert.equal(gun.numarasizZiyaret, 1);
+    assert.deepEqual(gun.satirlar.map(r => r.no), ['AAAA00', 'BBBB00', 'CCCC00'], 'toplam oynamaya göre');
+    assert.equal(gun.satirlar[1].toplamOynamaSn, 3600);
+    assert.equal(gun.satirlar[1].enUzunOynamaSn, 1200);
+    assert.equal(gun.satirlar[1].giris, 3);
+    assert.equal(gun.satirlar[1].ortOynamaSn, 1200);
+    assert.equal(gun.satirlar[0].sira, 1);
+    assert.equal(k.sayac.oyuncular('gun', '2026-11-18', 'giris').satirlar[0].no, 'BBBB00', 'giriş sayısına göre');
+    const tek = k.sayac.oyuncular('gun', '2026-11-18', 'tek').satirlar;
+    assert.deepEqual(tek.map(r => r.enUzunOynamaSn), [7200, 1200, 600], 'tek seferde en uzun oynamaya göre');
+    assert.ok(!JSON.stringify(gun).includes(P1), 'tam numara panele gönderilmez');
+
+    // Ertesi gün P2 bir daha gelir (40 dk), P1 hâlâ oynuyor
+    ileri(k, 24 * 3600);
+    ziyaret(k.sayac, kim(7), P2, 2400);
+    gonder(k.sayac, { k: kim(8), o: 'a', z: 2, s: 0, y: 0, p: P1 });
+    gonder(k.sayac, { k: kim(8), o: 'n', z: 2, s: 100, y: 60, p: P1 });
+    const ay = k.sayac.oyuncular('ay', '2026-11', 'toplam');
+    assert.equal(ay.bas, '2026-11-01');
+    assert.equal(ay.son, '2026-11-30');
+    const b2 = ay.satirlar.find(r => r.no === 'BBBB00');
+    assert.equal(b2.giris, 4);
+    assert.equal(b2.toplamOynamaSn, 6000);
+    assert.equal(b2.enUzunOynamaSn, 2400);
+    assert.equal(ay.satirlar[0].no, 'AAAA00');
+    assert.equal(ay.satirlar[0].toplamOynamaSn, 7260);
+    assert.equal(ay.satirlar[0].oyunda, true, 'şu an oyunda olan işaretlenir');
+    assert.equal(k.sayac.oyuncular('ay', '2026-11', 'giris').satirlar[0].no, 'BBBB00');
+    assert.equal(k.sayac.oyuncular('gun', '2026-11-19', 'toplam').oyuncuSayisi, 2);
+
+    // Sunucu yeniden başlar, aylar geçer: ham kayıtlar bellekten çıkar, oyuncu toplamları günlük özetlerden gelir
+    ileri(k, 60);
+    k.sayac.kaydet();
+    ileri(k, 200 * 24 * 3600);
+    const yeni = k.yeni();
+    const tum = yeni.oyuncular('tum', '', 'toplam');
+    assert.equal(tum.oyuncuSayisi, 3);
+    assert.equal(tum.satirlar.find(r => r.no === 'BBBB00').giris, 4);
+    assert.equal(tum.satirlar.find(r => r.no === 'AAAA00').toplamOynamaSn, 7260);
+    assert.equal(tum.numarasizZiyaret, 1);
+    assert.equal(yeni.oyuncular('ay', '2026-11', 'tek').satirlar[0].enUzunOynamaSn, 7200, 'eski ay hâlâ okunur');
+
+    // Geçersiz ve ölçülmemiş dönemler
+    assert.equal(yeni.oyuncular('hafta', '2026-11', 'toplam'), null);
+    assert.equal(yeni.oyuncular('ay', '2026-13', 'toplam'), null);
+    assert.equal(yeni.oyuncular('gun', '2026-1-1', 'toplam'), null);
+    assert.equal(yeni.oyuncular('ay', '2025-01', 'toplam').olculdu, false);
+    assert.equal(yeni.oyuncular('gun', '2026-11-18', 'bilinmeyen').sira, 'toplam');
+    // Bozuk oyuncu numarası kabul edilmez ama ziyaret sayılır
+    assert.equal(oyunSayac.olayCoz({ k: 'abcdef0123456789', o: 'a', z: 1, s: 0, y: 0, p: 'XYZ' }).p, '');
+  } finally { k.temizle(); }
 });

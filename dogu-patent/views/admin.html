@@ -100,6 +100,14 @@
     .oy-simdi span{font-size:.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--secondary)}
     .oy-simdi b{font-size:2rem;color:var(--primary);font-variant-numeric:tabular-nums}.oy-simdi small{font-size:.6875rem;color:var(--secondary);margin-left:auto}
     .oy-kutu small{display:block;line-height:1.6}
+    .oy-donem{display:flex;gap:.25rem;flex-wrap:wrap}.oy-donem button{padding:.4rem .8rem;border:1px solid #ddd;background:white;font-family:'Inter',sans-serif;font-size:.75rem;font-weight:600;color:var(--secondary);cursor:pointer}
+    .oy-donem button.on{background:var(--primary);color:white;border-color:var(--primary)}
+    .oy-araclar{display:flex;flex-wrap:wrap;gap:.75rem 1.25rem;align-items:center;font-size:.75rem;color:var(--secondary);margin-bottom:1rem}
+    .oy-araclar input,.oy-araclar select{font-family:'Inter',sans-serif;font-size:.8125rem;padding:.35rem .5rem;border:1px solid #ddd;background:white;color:inherit}
+    .oy-araclar label{display:flex;gap:.5rem;align-items:center;font-weight:600}.oy-araclar label[hidden]{display:none}
+    .sy-tablo th.oy-sirali{cursor:pointer;user-select:none}.sy-tablo th.oy-sirali:hover{color:var(--primary)}.sy-tablo th.oy-sirali.on{color:var(--primary)}
+    .sy-tablo td.oy-on{font-weight:700;color:var(--primary)}
+    .sy-tablo td small.oy-simdi-etiket{color:#1a7f37;font-weight:600;white-space:nowrap;word-break:normal}.sy-tablo td.oy-ad{white-space:nowrap}
     @media(max-width:900px){.sy-kutular{grid-template-columns:repeat(2,1fr)}.sy-iki{grid-template-columns:1fr}}
     @media(max-width:768px){.form-grid{grid-template-columns:1fr}.form-group.full{grid-column:span 1}.post-item{flex-wrap:wrap}}
   </style>
@@ -175,6 +183,18 @@
         <div class="card-header"><h2>Oyun ziyaretleri</h2><span class="sy-not" style="margin:0">oyun.dogupatent.com</span></div>
         <p class="sy-not">Bu sayılar yalnız bu panelde görünür; oyuncular göremez. Çerez veya kişisel veri kullanılmaz. Kişi, oyunu o tarayıcıda ilk kez açan cihazdır.</p>
         <div id="oyIcerik"><div class="empty-state"><span class="material-symbols-outlined">hourglass_top</span><p>Yükleniyor...</p></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2>Oyuncular</h2>
+          <div class="oy-donem" role="group" aria-label="Oyuncular dönemi"><button type="button" data-kapsam="gun" class="on">Günlük</button><button type="button" data-kapsam="ay">Aylık</button><button type="button" data-kapsam="tum">Tüm zamanlar</button></div>
+        </div>
+        <div class="oy-araclar">
+          <label id="oyGunEtiket">Gün <input type="date" id="oyTarihGun"/></label>
+          <label id="oyAyEtiket" hidden>Ay <input type="month" id="oyTarihAy"/></label>
+          <label>Sırala <select id="oySira"><option value="toplam">Toplam oynama süresi</option><option value="tek">Tek seferde en uzun oynama</option><option value="giris">Giriş sayısı</option></select></label>
+        </div>
+        <p class="sy-not">Her tarayıcı bir oyuncu sayılır ve rastgele bir numarayla görünür; kim olduğu bilinmez. Aynı kişi başka tarayıcı veya cihazdan gelirse ayrı oyuncu olur. Numaralar 18 Kasım 2026'da verilmeye başlandı; daha önceki ziyaretler bu tabloda yoktur. Sütun başlığına tıklayarak da sıralayabilirsiniz.</p>
+        <div id="oyOyuncular"><div class="empty-state"><span class="material-symbols-outlined">hourglass_top</span><p>Yükleniyor...</p></div></div>
       </div>
     </div>
     <div class="tab-content" id="tab-mesajlar"><div class="card"><div class="card-header"><h2>Iletisim Mesajlari</h2></div><div id="mesajList"></div></div></div>
@@ -300,7 +320,36 @@ function oySure(s){if(s==null)return '—';s=Math.round(s);if(s<60)return s+' sn
 function oyKacinci(z){return z?syN(z)+'. ziyaret':'bilinmiyor'}
 function oySaat(iso){return new Date(iso).toLocaleString('tr-TR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}
 function oySatir(v){return '<tr><td>'+syEsc(oySaat(v.baslangic))+(v.oyunda?'<small>şu an oyunda</small>':'')+'</td><td class="n">'+oySure(v.sayfaSn)+'</td><td class="n">'+oySure(v.oynamaSn)+'</td><td>'+oyKacinci(v.kacinci)+'</td><td>'+syEsc(SY_CIHAZ[v.cihaz]||v.cihaz)+'</td><td>'+syEsc(OY_KAYNAK[v.kaynak]||v.kaynak||'—')+(v.alan?'<small>'+syEsc(v.alan)+'</small>':'')+'</td></tr>'}
-function oyZamanla(acik){clearInterval(oyZamanlayici);oyZamanlayici=null;if(!acik)return;loadOyun();oyZamanlayici=setInterval(()=>{if(!document.hidden&&document.getElementById('tab-oyun').classList.contains('active'))loadOyun()},15000)}
+function oyZamanla(acik){clearInterval(oyZamanlayici);oyZamanlayici=null;if(!acik)return;loadOyun();loadOyuncular();oyZamanlayici=setInterval(()=>{if(!document.hidden&&document.getElementById('tab-oyun').classList.contains('active')){loadOyun();loadOyuncular()}},15000)}
+// ----- Oyuncular tablosu (günlük / aylık / tüm zamanlar; toplam oynama, tek seferde en uzun oynama veya giriş sayısına göre)
+const OY_SIRA_ADI={toplam:'toplam oynama süresine',tek:'tek seferde en uzun oynamaya',giris:'giriş sayısına'};
+const oyBugun=()=>{try{return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())}catch(e){return new Date(Date.now()+3*3600e3).toISOString().slice(0,10)}};
+let oyKapsam='gun',oySiraSecimi='toplam',oyIstekNo=0;
+(function(){const g=document.getElementById('oyTarihGun'),a=document.getElementById('oyTarihAy'),s=document.getElementById('oySira'),b=oyBugun();
+  g.value=b;g.max=b;a.value=b.slice(0,7);a.max=b.slice(0,7);
+  document.querySelectorAll('.oy-donem button').forEach(x=>x.addEventListener('click',()=>{oyKapsam=x.dataset.kapsam;document.querySelectorAll('.oy-donem button').forEach(y=>y.classList.toggle('on',y===x));
+    document.getElementById('oyGunEtiket').hidden=oyKapsam!=='gun';document.getElementById('oyAyEtiket').hidden=oyKapsam!=='ay';loadOyuncular()}));
+  g.addEventListener('change',loadOyuncular);a.addEventListener('change',loadOyuncular);
+  s.addEventListener('change',()=>{oySiraSecimi=s.value;loadOyuncular()});
+  document.getElementById('oyOyuncular').addEventListener('click',e=>{const th=e.target.closest('th[data-sira]');if(!th)return;oySiraSecimi=th.dataset.sira;s.value=oySiraSecimi;loadOyuncular()});})();
+async function loadOyuncular(){
+  const c=document.getElementById('oyOyuncular'),no=++oyIstekNo;
+  const tarih=oyKapsam==='gun'?document.getElementById('oyTarihGun').value:oyKapsam==='ay'?document.getElementById('oyTarihAy').value:'';
+  if(oyKapsam!=='tum'&&!tarih){c.innerHTML='<p class="sy-not">Bir '+(oyKapsam==='gun'?'gün':'ay')+' seçin.</p>';return}
+  try{
+    const r=await authFetch('/api/admin/oyun-sayac/oyuncular?kapsam='+oyKapsam+'&tarih='+encodeURIComponent(tarih)+'&sira='+oySiraSecimi);
+    if(!r.ok)throw new Error('http '+r.status);
+    const d=await r.json();if(no!==oyIstekNo)return;
+    const donemAdi=oyKapsam==='tum'?'Tüm zamanlar':oyKapsam==='gun'?new Date(d.bas+'T12:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric',weekday:'long'}):new Date(d.bas+'T12:00:00').toLocaleDateString('tr-TR',{month:'long',year:'numeric'});
+    if(!d.olculdu){c.innerHTML='<p class="sy-not">'+syEsc(donemAdi)+': ölçülmedi (sayaç bu dönemden sonra başladı ya da dönem henüz gelmedi).</p>';return}
+    const ust='<p class="sy-not" style="margin-bottom:.75rem"><b>'+syEsc(donemAdi)+'</b> · '+syN(d.oyuncuSayisi)+' oyuncu, '+syEsc(OY_SIRA_ADI[d.sira]||'')+' göre'+(d.oyuncuSayisi>d.satirlar.length?' · ilk '+syN(d.satirlar.length)+' gösteriliyor':'')+(d.numarasizZiyaret?' · oyuncu numarası olmayan '+syN(d.numarasizZiyaret)+' ziyaret tabloda yok':'')+'</p>';
+    if(!d.satirlar.length){c.innerHTML=ust+'<p class="sy-not">Bu dönemde oyuncu numaralı ziyaret yok.</p>';return}
+    const th=(k,ad)=>'<th class="n oy-sirali'+(d.sira===k?' on':'')+'" data-sira="'+k+'" title="Buna göre sırala">'+ad+(d.sira===k?' ▼':'')+'</th>';
+    const td=(k,v)=>'<td class="n'+(d.sira===k?' oy-on':'')+'">'+v+'</td>';
+    const satir=v=>'<tr><td class="n">'+v.sira+'</td><td class="oy-ad">Oyuncu #'+syEsc(v.no)+(v.oyunda?'<small class="oy-simdi-etiket">şu an oyunda</small>':'')+'</td>'+td('toplam',oySure(v.toplamOynamaSn))+td('tek',oySure(v.enUzunOynamaSn))+td('giris',syN(v.giris))+'<td class="n">'+oySure(v.ortOynamaSn)+'</td><td>'+syEsc(oySaat(v.son))+'</td><td>'+syEsc(SY_CIHAZ[v.cihaz]||v.cihaz||'—')+'</td></tr>';
+    c.innerHTML=ust+'<div class="sy-kaydir"><table class="sy-tablo"><thead><tr><th class="n">#</th><th>Oyuncu</th>'+th('toplam','Toplam oynama')+th('tek','Tek seferde en uzun')+th('giris','Giriş')+'<th class="n">Ort. oynama</th><th>Son geliş</th><th>Cihaz</th></tr></thead><tbody>'+d.satirlar.map(satir).join('')+'</tbody></table></div>';
+  }catch(e){if(no===oyIstekNo)c.innerHTML='<div class="empty-state"><span class="material-symbols-outlined">error</span><p>Oyuncu bilgisi yüklenemedi.</p></div>'}
+}
 async function loadOyun(){
   const c=document.getElementById('oyIcerik');
   try{

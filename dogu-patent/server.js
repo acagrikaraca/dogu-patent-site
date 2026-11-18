@@ -549,6 +549,12 @@ app.post('/api/oyun-sayac', (req, res) => {
 app.get('/api/admin/oyun-sayac', adminAuth, (req, res) => {
   res.set('Cache-Control', 'no-store').json(oyunSayac.ozet());
 });
+// Oyuncular tablosu: ?kapsam=gun&tarih=YYYY-AA-GG · ?kapsam=ay&tarih=YYYY-AA · ?kapsam=tum ; &sira=toplam|tek|giris
+app.get('/api/admin/oyun-sayac/oyuncular', adminAuth, (req, res) => {
+  const sonuc = oyunSayac.oyuncular(String(req.query.kapsam || ''), String(req.query.tarih || ''), String(req.query.sira || ''));
+  if (!sonuc) return res.status(400).json({ hata: 'Geçersiz dönem.' });
+  res.set('Cache-Control', 'no-store').json(sonuc);
+});
 
 app.use((req, res) => { res.status(404).sendFile(path.join(VIEWS_ROOT, 'index.html')); });
 app.listen(PORT, () => {

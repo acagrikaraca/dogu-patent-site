@@ -4,6 +4,8 @@
 // Kişisel veri tutulmaz: çerez, IP adresi, tarayıcı bilgisi veya kalıcı ziyaretçi kimliği saklanmaz.
 // "k" yalnız bir sekmenin (bir ziyaretin) olaylarını birleştirmek içindir; sekme kapanınca tarayıcıda da kaybolur.
 // "z" cihazda tutulan düz bir sayaçtır (kaçıncı ziyaret), kimlik değildir.
+// "p" (2026-11-18'den beri) tarayıcıya bir kez verilen rastgele oyuncu numarasıdır: oyuncular tablosunda aynı tarayıcının
+// ziyaretlerini birleştirir (toplam oynama, en uzun tek oynama, giriş sayısı). Cihazdan veya kişiden türetilmez; kim olduğu bilinmez.
 const fs = require('fs');
 const path = require('path');
 const { istanbulGunu, gunEkle, kaynakTuru, temizAlan } = require('./sayac');
@@ -29,6 +31,8 @@ const DAGILIM_ADLARI = ['1 dk altı', '1–5 dk', '5–15 dk', '15–30 dk', '30
 // Ayrıntılı ham kayıt silindikten sonra medyanı yaklaşık bulmak için ince süre dilimleri (sn)
 const HIST = [10, 20, 30, 45, 60, 90, 120, 180, 240, 300, 420, 600, 900, 1200, 1800, 2700, 3600, 5400, 7200, 10800, SURE_SINIRI];
 const Z_UST = 11;
+const OYUNCU_SATIR_SINIRI = 200;                    // oyuncular tablosunda gönderilen en çok satır
+const OYUNCU_SIRALARI = { toplam: 'toplamOynamaSn', tek: 'enUzunOynamaSn', giris: 'giris' };
 const TAM_MEDYAN_GUN = 30;                         // "kaç kere" için z = 0…11 ayrı, 12 ve üstü tek kutuda tutulur
 
 // ---- girdi temizliği
@@ -58,7 +62,8 @@ function olayCoz(govde) {
   const z = sayi(govde.z, 0, 9999), s = sayi(govde.s, 0, SURE_SINIRI), y = sayi(govde.y, 0, SURE_SINIRI);
   if (z === null || s === null || y === null) return null;
   const r = govde.r == null ? '' : temizAlan(govde.r);
-  return { k, o: govde.o, z, s, y: Math.min(y, s), r };
+  const p = govde.p == null ? '' : temizKimlik(govde.p);
+  return { k, o: govde.o, z, s, y: Math.min(y, s), r, p };
 }
 function rkTuru(alan) {
   if (!alan) return 'dogrudan';
@@ -90,7 +95,7 @@ function histMedyan(h) {
 function bosOzet(gun) {
   return { gun, ziyaret: 0, z: Array(Z_UST + 2).fill(0), oynayan: 0, yT: 0, sT: 0, yOT: 0, yMax: 0, sMax: 0,
            yH: Array(HIST.length).fill(0), sH: Array(HIST.length).fill(0), dag: Array(DAGILIM_ADLARI.length).fill(0), oynamayan: 0,
-           cih: Object.fromEntries(CIHAZLAR.map(c => [c, 0])) };
+           cih: Object.fromEntries(CIHAZLAR.map(c => [c, 0])), oy: {} };
 }
 function ozeteEkle(o, v) {
   o.ziyaret++;
@@ -101,6 +106,13 @@ function ozeteEkle(o, v) {
   if (v.y >= OYNAYAN_ESIGI) { o.oynayan++; o.yOT += v.y; o.yH[histIndeks(v.y)]++; }
   if (v.y > 0) o.dag[dagilimIndeks(v.y)]++; else o.oynamayan++;
   if (CIHAZLAR.includes(v.c)) o.cih[v.c]++;
+  // Oyuncu numarası olan ziyaret: [giriş, toplam oynama, en uzun tek oynama, toplam sayfada, ilk açılış ms, son haber ms, cihaz]
+  if (v.p) {
+    const x = o.oy[v.p] || (o.oy[v.p] = [0, 0, 0, 0, v.b, v.son, v.c]);
+    x[0]++; x[1] += v.y; x[2] = Math.max(x[2], v.y); x[3] += v.s;
+    if (v.b < x[4]) x[4] = v.b;
+    if (v.son >= x[5]) { x[5] = v.son; x[6] = v.c; }
+  }
 }
 function ozetTopla(hedef, o) {
   for (const a of ['ziyaret', 'oynayan', 'yT', 'sT', 'yOT', 'oynamayan']) hedef[a] += o[a] || 0;
@@ -243,16 +255,18 @@ function olustur(secenek) {
       if (m.size >= GUNLUK_ZIYARET_SINIRI) return false;
       v = { k: x.k, b: t, son: t, o: x.o, z: x.z, s: x.s, y: x.y, c: cihazTuru(ua), rt: rkTuru(x.r) };
       if (x.r) v.r = x.r;
+      if (x.p) v.p = x.p;
       m.set(x.k, v);
       anahtarlar.set(x.k, bugun);
       kirlet(bugun);
       return true;
     }
-    const degisti = x.s > v.s || x.y > v.y || x.o !== v.o || (!v.z && x.z) || (x.r && !v.r);
+    const degisti = x.s > v.s || x.y > v.y || x.o !== v.o || (!v.z && x.z) || (x.r && !v.r) || (x.p && !v.p);
     v.s = Math.max(v.s, x.s);
     v.y = Math.min(v.s, Math.max(v.y, x.y));
     if (!v.z && x.z) v.z = x.z;
     if (x.r && !v.r) { v.r = x.r; v.rt = rkTuru(x.r); }
+    if (x.p && !v.p) v.p = x.p;
     v.o = x.o; v.son = t;
     if (degisti) kirlet(eskiGun);   // yalnız zamanı değişen nabız diske yazılmaz (şu an hesabı bellekten)
     return true;
@@ -338,6 +352,58 @@ function olustur(secenek) {
     };
   }
 
+  // Oyuncular tablosu: bir gün (kapsam 'gun', deger YYYY-AA-GG), bir ay ('ay', YYYY-AA) veya bütün dönem ('tum').
+  // Günlük özetlerdeki oyuncu kayıtlarından toplanır (günlük özetler silinmediği için eski aylar da kalır).
+  // Bir ziyaret açıldığı güne sayılır. sira: 'toplam' (toplam oynama) · 'tek' (en uzun tek oynama) · 'giris' (giriş sayısı).
+  function oyuncular(kapsam, deger, sira) {
+    kaydet();
+    const t = simdi(), bugun = istanbulGunu(t), ilk = ilkGun();
+    let bas, son;
+    if (kapsam === 'gun' && /^\d{4}-\d{2}-\d{2}$/.test(deger || '')) { bas = son = deger; }
+    else if (kapsam === 'ay' && /^\d{4}-(0[1-9]|1[0-2])$/.test(deger || '')) {
+      bas = deger + '-01';
+      const sonraki = new Date(Date.UTC(+deger.slice(0, 4), +deger.slice(5, 7), 1, 12));
+      son = gunEkle(sonraki.toISOString().slice(0, 10), -1);
+    } else if (kapsam === 'tum') { bas = ilk || bugun; son = bugun; }
+    else return null;
+    if (!OYUNCU_SIRALARI[sira]) sira = 'toplam';
+    const sonuc = { kapsam, deger: kapsam === 'tum' ? null : deger, bas, son, sira, olculdu: !!ilk && son >= ilk && bas <= bugun,
+                    oyuncuSayisi: 0, numarasizZiyaret: 0, satirlar: [] };
+    if (!sonuc.olculdu) return sonuc;
+    if (ilk && bas < ilk) bas = ilk;
+    if (son > bugun) son = bugun;
+    const birlesik = new Map();
+    for (let g = bas; g <= son; g = gunEkle(g, 1)) {
+      const o = gunOzeti(g);
+      if (!o.ziyaret) continue;
+      let numarali = 0;
+      for (const [p, x] of Object.entries(o.oy || {})) {
+        if (!temizKimlik(p) || !Array.isArray(x)) continue;
+        numarali += x[0] || 0;
+        const a = birlesik.get(p);
+        if (!a) { birlesik.set(p, x.slice()); continue; }
+        a[0] += x[0]; a[1] += x[1]; a[2] = Math.max(a[2], x[2]); a[3] += x[3];
+        if (x[4] < a[4]) a[4] = x[4];
+        if (x[5] >= a[5]) { a[5] = x[5]; a[6] = x[6]; }
+      }
+      sonuc.numarasizZiyaret += Math.max(0, o.ziyaret - numarali);
+    }
+    const satirlar = [...birlesik].map(([p, a]) => ({
+      no: p.slice(0, 6).toUpperCase(), giris: a[0], toplamOynamaSn: a[1], enUzunOynamaSn: a[2],
+      ortOynamaSn: a[0] ? Math.round(a[1] / a[0]) : 0, toplamSayfaSn: a[3],
+      ilk: new Date(a[4]).toISOString(), son: new Date(a[5]).toISOString(), cihaz: a[6],
+      oyunda: false, _p: p
+    }));
+    // Şu an oyunda olan oyuncular işaretlenir
+    const simdikiOyuncular = new Set();
+    for (const m of gunler.values()) for (const v of m.values()) if (v.p && (v.o === 'a' || v.o === 'n') && t - v.son <= SIMDI_PENCERESI) simdikiOyuncular.add(v.p);
+    const anahtar = OYUNCU_SIRALARI[sira];
+    satirlar.sort((a, b) => b[anahtar] - a[anahtar] || b.toplamOynamaSn - a.toplamOynamaSn || b.giris - a.giris || (a.son < b.son ? 1 : -1));
+    sonuc.oyuncuSayisi = satirlar.length;
+    sonuc.satirlar = satirlar.slice(0, OYUNCU_SATIR_SINIRI).map((r, i) => { r.sira = i + 1; r.oyunda = simdikiOyuncular.has(r._p); delete r._p; return r; });
+    return sonuc;
+  }
+
   // Yönetici paneli için tek özet
   function ozet() {
     kaydet();
@@ -378,17 +444,18 @@ function olustur(secenek) {
       notlar: [
         'Kişi: cihazdaki ilk ziyaret (bu tarayıcıda oyun ilk kez açıldı). Aynı kişi başka tarayıcı veya cihazdan gelirse yeniden sayılır; tarayıcı verisi silinirse de.',
         'Sayılamayan: tarayıcı kayıt tutmaya izin vermediği için kaçıncı ziyaret olduğu bilinmeyen ziyaret; kişi sayısına katılmaz.',
+        'Oyuna dokunulmayan süre oynama sayılmaz: 18 Kasım 2026\'dan beri, oyuna başlandıktan sonra süre yalnız son tuş, fare veya oyun kolu hareketine kadar sayılır; 5 dakika hiçbir şeye dokunulmazsa ziyaret bitmiş sayılır ve dokunulunca devam eder. Daha önceki ziyaretlerde açık bırakılan sekme oynama sayılmıştı (en çok 4 saat).',
         'Oynayan: başlangıç noktası seçilip en az 10 saniye oynanan ziyaret. Ortalama ve medyan oynama süresi yalnız oynayan ziyaretlerden hesaplanır; toplam oynama bütün ziyaretlerin toplamıdır.',
-        'Sayfa süresi, oyun sayfasının ekranda açık (görünür) kaldığı süredir. Tek ziyarette en çok 4 saat sayılır.',
+        'Sayfa süresi, oyun sayfasının ekranda açık (görünür) kaldığı süredir; 18 Kasım 2026\'dan beri 5 dakika dokunulmayan sekmenin süresi sayılmaz. Tek ziyarette en çok 4 saat sayılır.',
         'Mobilden gelen: telefon veya tabletle açılan ziyaret. Oyun bu cihazlarda açılmaz, yalnız "mobil sürüm yok" bilgisi gösterilir; bu ziyaretler sayılır ama süreleri sıfırdır ve "şu an oyunda" görünmezler.',
         'Şu an oyunda: son 60 saniye içinde oyundan haber gelen açık sekme.',
         '"Kaç kere geldi" tablosu bütün ölçüm süresi içindir; her ziyaretin kaçıncı ziyaret olduğundan hesaplanır.',
-        'Çerez, IP adresi veya kalıcı kimlik kullanılmaz; botlar sayılmaz.'
+        'Çerez veya IP adresi kullanılmaz; botlar sayılmaz. Oyuncular tablosu için her tarayıcıya bir kez rastgele bir oyuncu numarası verilir (18 Kasım 2026\'dan beri); kim olduğu bilinmez, tarayıcı verisi silinirse yeni numara alır.'
       ]
     };
   }
 
-  return { olay, ozet, kaydet, gunOzeti, kaynaklar };
+  return { olay, ozet, oyuncular, kaydet, gunOzeti, kaynaklar };
 }
 
 module.exports = { olustur, olayCoz, cihazTuru, kaynakListesi, histMedyan, SURE_SINIRI, DAGILIM_ADLARI, OYNAYAN_ESIGI };
